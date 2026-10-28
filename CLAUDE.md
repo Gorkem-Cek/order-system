@@ -32,6 +32,7 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - Order status flow: `new → preparing → served`; `cancelled` allowed only from `new` or `preparing`. Enforce in one place (the order service), never in route handlers.
 - Orders are created only after payment succeeds (pay-before-send): `ordersService.checkout` prices lines from the DB, charges via the `PaymentProvider` (`apps/api/src/modules/payments`, mock for now), then creates the order; it refunds if saving fails. Order numbers restart daily (Istanbul day, `businessDate()`), allocated under a per-café advisory lock.
 - Status transitions live only in `apps/api/src/modules/orders/order-status.ts` (`canTransition`).
+- Real-time: services publish `StaffEvent`s (`packages/shared/src/events.ts`) on the in-process `EventBus` (`apps/api/src/lib/event-bus.ts`); `GET /api/staff/events` streams them per café as SSE. Single API instance only — multiple instances would need Postgres LISTEN/NOTIFY behind the same bus. The web board patches the TanStack Query cache from events and refetches on every (re)connect.
 - Money is stored as integer kuruş (TRY), never floats. The server recalculates all prices at checkout; never trust client totals. Line pricing and option rules live in one function, `priceLine` in `packages/shared` — the cart and the checkout service both use it.
 - Every café-owned query is scoped by `cafeId`. Guests are identified only by the table's random `qrToken`.
 - Order items snapshot product name, price and selected options.
@@ -45,7 +46,8 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - API integration tests use `createTestContext()` from `apps/api/src/test/helpers.ts` against the real database.
 - Web: features live in `apps/web/src/features/<feature>/` (components + `*.module.css` + hooks); shared UI in `src/components`. Data fetching uses TanStack Query with `apiFetch` (`src/lib/api.ts`), which validates responses with the shared zod schemas. Routes are in `src/routes.tsx`.
 - Web UI text: add keys to `src/i18n/tr.ts` (source of truth, typed) and `src/i18n/en.ts`. Brand colour is applied via `brandStyle()` CSS variables (`--brand`, `--brand-contrast`).
-- Web tests render real routes with `renderRoute()` and stub `fetch` with `mockFetch()` (`src/test/render.tsx`).
+- Web tests render real routes with `renderRoute()`, stub `fetch` with `mockFetch()` and live events with `FakeEventSource` (`src/test/render.tsx`).
+- Staff pages render inside `StaffLayout` (`/staff`), which requires a login and provides `useStaff()` (user, café, `staffFetch` that adds `X-Cafe-Id` for a super-admin acting as a café).
 - Every new endpoint or service function gets tests in the same change.
 - Never commit secrets; config comes from `.env` (see `.env.example`).
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
