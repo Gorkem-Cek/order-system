@@ -10,11 +10,11 @@ Status: **confirmed** (2026-10-28).
 
 ## 1. Roles
 
-| Role | Login | Can do |
-|---|---|---|
-| **Customer (guest)** | None | Open a table's menu via QR, search, add to cart with options + notes, pay (fake), call the waiter |
+| Role                                                        | Login                                            | Can do                                                                                                                                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Customer (guest)**                                        | None                                             | Open a table's menu via QR, search, add to cart with options + notes, pay (fake), call the waiter                                                                                   |
 | **Café staff** (waiters and owners — identical permissions) | One **shared login per café** (email + password) | Live order board, change order status, answer waiter calls, manage menu/prices/availability/options, manage tables + print QR codes, edit café branding, change the café's password |
-| **Super-admin** (you) | Email + password | Everything, across all cafés: create/deactivate cafés, create a café's login, reset its password, open any café's admin panel |
+| **Super-admin** (you)                                       | Email + password                                 | Everything, across all cafés: create/deactivate cafés, create a café's login, reset its password, open any café's admin panel                                                       |
 
 There are no individual staff accounts in the MVP. The data model still allows several logins per café, so individual accounts can be added later without a migration.
 
@@ -72,6 +72,7 @@ All money is **integer kuruş** (₺12,50 = `1250`). Every café-owned row has a
 - **WaiterCall**: id, cafeId, tableId, status (`open` | `resolved`), createdAt, resolvedAt?
 
 Rules:
+
 - The **server recalculates every price** at checkout from the database. Totals sent by the client are ignored.
 - Order items store snapshots, so later menu or price edits don't change past orders.
 
@@ -102,6 +103,7 @@ Per CLAUDE.md, plus these decisions:
 ## 10. Deployment (recommendation)
 
 **Railway**: one service runs the Fastify API and serves the built web app, alongside a managed PostgreSQL and Cloudflare R2 for images.
+
 - SSE needs a long-running server, which rules out serverless hosts like Vercel for the API.
 - It's cheap at the start, deploys from GitHub, and scales up later. Fly.io or a VPS with Docker remain options if needed.
 
@@ -111,8 +113,8 @@ Real payments, tax/VAT, reports and analytics, customer order tracking, multi-la
 
 ## 12. Build order (each step = one small PR)
 
-1. Monorepo setup: workspaces, TS, ESLint/Prettier, Vitest, Prisma, CI green
-2. Data model + migrations + demo seed
+1. Monorepo setup: workspaces, TS, ESLint/Prettier, Vitest, CI green
+2. Prisma setup + data model + migrations + demo seed
 3. Shared zod schemas (menu, cart, order, auth)
 4. Staff auth + super-admin café creation
 5. Public menu API + customer menu/search/product sheet/cart UI (TR/EN)
