@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { generateQrToken } from "./tokens";
+import { generateQrToken, generateSessionToken, hashToken } from "./tokens";
+
+describe("session tokens", () => {
+  it("generates 43-character URL-safe tokens", () => {
+    expect(generateSessionToken()).toMatch(/^[A-Za-z0-9_-]{43}$/);
+  });
+
+  it("hashes deterministically to hex without exposing the token", () => {
+    const token = generateSessionToken();
+    expect(hashToken(token)).toBe(hashToken(token));
+    expect(hashToken(token)).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashToken(token)).not.toContain(token);
+  });
+});
 
 describe("generateQrToken", () => {
   it("returns a 22-character URL-safe token", () => {
