@@ -13,6 +13,7 @@ describe("loadConfig", () => {
       DATABASE_URL,
       SESSION_TTL_DAYS: 30,
       LOGIN_RATE_LIMIT: 10,
+      CHECKOUT_RATE_LIMIT: 10,
     });
   });
 

@@ -15,13 +15,29 @@ import { staffCafeRoutes } from "./modules/cafes/staff-cafe.routes";
 import { createMenuRepository } from "./modules/menu/menu.repository";
 import { menuRoutes } from "./modules/menu/menu.routes";
 import { createMenuService } from "./modules/menu/menu.service";
+import { createOrdersRepository } from "./modules/orders/orders.repository";
+import { createOrdersService } from "./modules/orders/orders.service";
+import { staffOrdersRoutes } from "./modules/orders/staff-orders.routes";
+import {
+  createMockPaymentProvider,
+  type PaymentProvider,
+} from "./modules/payments/payment-provider";
 import { authPlugin, createSessionCookie } from "./plugins/auth";
 import { registerErrorHandlers } from "./plugins/error-handler";
 import { healthRoutes } from "./routes/health";
 
-export type AppDeps = { config: Config; prisma: PrismaClient };
+export type AppDeps = {
+  config: Config;
+  prisma: PrismaClient;
+  /** Defaults to the mock provider (MVP). */
+  payments?: PaymentProvider;
+  now?: () => Date;
+};
 
-export function buildApp({ config, prisma }: AppDeps, options: FastifyServerOptions = {}) {
+export function buildApp(
+  { config, prisma, payments = createMockPaymentProvider(), now }: AppDeps,
+  options: FastifyServerOptions = {},
+) {
   const app = Fastify(options);
 
   const users = createUsersRepository(prisma);
@@ -30,6 +46,13 @@ export function buildApp({ config, prisma }: AppDeps, options: FastifyServerOpti
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
   const cafesService = createCafesService({ cafes, users, sessions });
   const menuService = createMenuService({ menu: createMenuRepository(prisma) });
+  const ordersService = createOrdersService({
+    orders: createOrdersRepository(prisma),
+    menuService,
+    payments,
+    ...(now && { now }),
+    log: app.log,
+  });
   const sessionCookie = createSessionCookie({ secure: config.NODE_ENV === "production" });
 
   registerErrorHandlers(app);
@@ -50,7 +73,13 @@ export function buildApp({ config, prisma }: AppDeps, options: FastifyServerOpti
   });
   app.register(adminCafesRoutes, { prefix: "/api/admin", cafesService });
   app.register(staffCafeRoutes, { prefix: "/api/staff", cafes, cafesService });
-  app.register(menuRoutes, { prefix: "/api/menu", menuService });
+  app.register(staffOrdersRoutes, { prefix: "/api/staff", cafes, ordersService });
+  app.register(menuRoutes, {
+    prefix: "/api/menu",
+    menuService,
+    ordersService,
+    checkoutRateLimit: config.CHECKOUT_RATE_LIMIT,
+  });
 
   return app;
 }

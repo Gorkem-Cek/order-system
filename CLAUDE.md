@@ -30,7 +30,8 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 ## Domain rules
 
 - Order status flow: `new → preparing → served`; `cancelled` allowed only from `new` or `preparing`. Enforce in one place (the order service), never in route handlers.
-- Orders are created only after payment succeeds (pay-before-send).
+- Orders are created only after payment succeeds (pay-before-send): `ordersService.checkout` prices lines from the DB, charges via the `PaymentProvider` (`apps/api/src/modules/payments`, mock for now), then creates the order; it refunds if saving fails. Order numbers restart daily (Istanbul day, `businessDate()`), allocated under a per-café advisory lock.
+- Status transitions live only in `apps/api/src/modules/orders/order-status.ts` (`canTransition`).
 - Money is stored as integer kuruş (TRY), never floats. The server recalculates all prices at checkout; never trust client totals. Line pricing and option rules live in one function, `priceLine` in `packages/shared` — the cart and the checkout service both use it.
 - Every café-owned query is scoped by `cafeId`. Guests are identified only by the table's random `qrToken`.
 - Order items snapshot product name, price and selected options.

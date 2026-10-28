@@ -9,6 +9,8 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
   // Login attempts allowed per IP per minute.
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
+  // Checkout attempts allowed per IP and table per minute.
+  CHECKOUT_RATE_LIMIT: z.coerce.number().int().positive().default(10),
 });
 
 export type Config = z.infer<typeof envSchema>;

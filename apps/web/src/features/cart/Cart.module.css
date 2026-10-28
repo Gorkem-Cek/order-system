@@ -31,6 +31,15 @@
 }
 
 /* Cart sheet */
+.notice {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .empty {
   padding: 24px 0;
   color: var(--text-muted);
