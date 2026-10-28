@@ -7,13 +7,24 @@
     "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
     "build": "tsup",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.2",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "fastify": "^5.12.7",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "prisma": "7.10.1",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15"
   }

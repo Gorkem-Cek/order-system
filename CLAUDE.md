@@ -21,6 +21,10 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - `npm run build` — build web (`apps/web/dist`) and api (`apps/api/dist`)
 - `npm run test:e2e` — Playwright end-to-end tests (added in a later step)
 - Local DB: PostgreSQL 17 on `localhost:5432`, database `siparis`; set `DATABASE_URL` in `.env`
+- `npm run db:migrate -- --name <change>` — create + apply a migration after editing `apps/api/prisma/schema.prisma`
+- `npm run db:seed` — (re)create the demo café "Demo Kafe" with dev logins (printed by the seed)
+- `npm run db:reset` / `npm run db:deploy` / `npm run db:studio` — reset dev DB / apply migrations / browse data
+- The Prisma client is generated into `apps/api/src/generated` on `npm install` (not committed)
 
 ## Domain rules
 
