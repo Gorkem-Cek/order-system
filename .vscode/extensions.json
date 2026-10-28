@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    "prisma.prisma",
+    "github.vscode-pull-request-github",
+    "editorconfig.editorconfig"
+  ]
+}
