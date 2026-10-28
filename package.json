@@ -1,0 +1,39 @@
+{
+  "name": "siparis",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w @siparis/api\" \"npm run dev -w @siparis/web\"",
+    "build": "npm run build -w @siparis/web && npm run build -w @siparis/api",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
