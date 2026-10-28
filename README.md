@@ -38,7 +38,7 @@ docs/
 
 ## Getting started
 
-Requires Node.js 22.12+ (24 LTS recommended) and PostgreSQL 17.
+Requires Node.js 22.22+ (24 LTS recommended) and PostgreSQL 17.
 
 ```bash
 git clone https://github.com/Gorkem-Cek/order-system.git

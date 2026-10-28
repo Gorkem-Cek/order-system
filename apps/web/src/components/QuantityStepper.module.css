@@ -1,0 +1,12 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.value {
+  min-width: 2ch;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

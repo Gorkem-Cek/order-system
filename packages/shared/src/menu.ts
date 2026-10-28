@@ -3,6 +3,9 @@ import { idSchema, kurusSchema } from "./common";
 
 // GET /api/menu/:qrToken — the public menu a guest sees after scanning a table's QR code.
 
+/** The random token in a table's QR link (/m/<qrToken>). */
+export const qrTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
+
 export const menuOptionSchema = z.object({
   id: idSchema,
   name: z.string(),

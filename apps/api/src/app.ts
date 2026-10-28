@@ -12,6 +12,9 @@ import { adminCafesRoutes } from "./modules/cafes/admin-cafes.routes";
 import { createCafesRepository } from "./modules/cafes/cafes.repository";
 import { createCafesService } from "./modules/cafes/cafes.service";
 import { staffCafeRoutes } from "./modules/cafes/staff-cafe.routes";
+import { createMenuRepository } from "./modules/menu/menu.repository";
+import { menuRoutes } from "./modules/menu/menu.routes";
+import { createMenuService } from "./modules/menu/menu.service";
 import { authPlugin, createSessionCookie } from "./plugins/auth";
 import { registerErrorHandlers } from "./plugins/error-handler";
 import { healthRoutes } from "./routes/health";
@@ -26,6 +29,7 @@ export function buildApp({ config, prisma }: AppDeps, options: FastifyServerOpti
   const cafes = createCafesRepository(prisma);
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
   const cafesService = createCafesService({ cafes, users, sessions });
+  const menuService = createMenuService({ menu: createMenuRepository(prisma) });
   const sessionCookie = createSessionCookie({ secure: config.NODE_ENV === "production" });
 
   registerErrorHandlers(app);
@@ -46,6 +50,7 @@ export function buildApp({ config, prisma }: AppDeps, options: FastifyServerOpti
   });
   app.register(adminCafesRoutes, { prefix: "/api/admin", cafesService });
   app.register(staffCafeRoutes, { prefix: "/api/staff", cafes, cafesService });
+  app.register(menuRoutes, { prefix: "/api/menu", menuService });
 
   return app;
 }
