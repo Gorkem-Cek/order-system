@@ -7,7 +7,10 @@ export const roleSchema = z.enum(["SUPER_ADMIN", "STAFF"]);
 export type Role = z.infer<typeof roleSchema>;
 
 // Trim and lowercase before checking the format, so " Demo@Kafe.com " is accepted.
-const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
+export const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
+
+/** Rules for any newly chosen password. */
+export const newPasswordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(200);
 
 // POST /api/auth/login
 export const loginRequestSchema = z.object({
@@ -29,7 +32,7 @@ export const sessionUserSchema = z.object({
 export const changePasswordRequestSchema = z
   .object({
     currentPassword: z.string().min(1).max(200),
-    newPassword: z.string().min(PASSWORD_MIN_LENGTH).max(200),
+    newPassword: newPasswordSchema,
   })
   .refine(({ currentPassword, newPassword }) => currentPassword !== newPassword, {
     message: "New password must differ from the current one",

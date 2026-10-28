@@ -25,6 +25,7 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - `npm run db:seed` — (re)create the demo café "Demo Kafe" with dev logins (printed by the seed)
 - `npm run db:reset` / `npm run db:deploy` / `npm run db:studio` — reset dev DB / apply migrations / browse data
 - The Prisma client is generated into `apps/api/src/generated` on `npm install` (not committed)
+- `npm run admin:create -w @siparis/api` — create/reset the super-admin from `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD`
 
 ## Domain rules
 
@@ -38,7 +39,9 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 
 ## Conventions
 
-- Small, focused modules; route → service → repository layering in the API.
+- Small, focused modules; route → service → repository layering in the API, grouped per feature in `apps/api/src/modules/<feature>/` (`*.routes.ts`, `*.service.ts`, `*.repository.ts`). Services receive repositories via factory functions; `buildApp({ config, prisma })` wires them.
+- Auth: DB-backed sessions in an httpOnly cookie. Guard routes with `requireUser`, `requireSuperAdmin` or `requireCafe` (staff routes; super-admin picks the café via the `X-Cafe-Id` header) from `apps/api/src/plugins/auth.ts`. Throw `AppError` (`apps/api/src/lib/errors.ts`) for expected errors.
+- API integration tests use `createTestContext()` from `apps/api/src/test/helpers.ts` against the real database.
 - Every new endpoint or service function gets tests in the same change.
 - Never commit secrets; config comes from `.env` (see `.env.example`).
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).

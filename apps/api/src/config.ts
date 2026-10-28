@@ -5,6 +5,10 @@ const envSchema = z.object({
   API_HOST: z.string().default("localhost"),
   API_PORT: z.coerce.number().int().positive().default(3000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  DATABASE_URL: z.string().min(1),
+  SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  // Login attempts allowed per IP per minute.
+  LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
 });
 
 export type Config = z.infer<typeof envSchema>;
