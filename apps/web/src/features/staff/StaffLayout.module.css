@@ -1,0 +1,134 @@
+.shell {
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.cafe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  font-size: 1.125rem;
+}
+
+.cafeName {
+  font-weight: 800;
+  font-size: 1.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inactive {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+}
+
+.navLink {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.navLink[aria-current="page"] {
+  background: color-mix(in srgb, var(--brand) 12%, white);
+  color: color-mix(in srgb, var(--brand) 85%, black);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.action {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Super-admin café picker */
+.picker {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pickerHeader h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.cafeList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cafeButton {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+
+.cafeButtonName {
+  font-weight: 700;
+}
+
+.cafeButtonMeta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}

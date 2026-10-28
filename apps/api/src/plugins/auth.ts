@@ -1,4 +1,4 @@
-import { CAFE_ID_HEADER, idSchema, type SessionUser } from "@siparis/shared";
+import { CAFE_ID_HEADER, CAFE_ID_QUERY, idSchema, type SessionUser } from "@siparis/shared";
 import type { FastifyReply, FastifyRequest, preHandlerAsyncHookHandler } from "fastify";
 import fp from "fastify-plugin";
 import { AppError, forbidden, notFound, unauthorized } from "../lib/errors";
@@ -79,12 +79,14 @@ export function requireCafe(cafes: CafesRepository): preHandlerAsyncHookHandler 
       return;
     }
 
-    const header = idSchema.safeParse(request.headers[CAFE_ID_HEADER]);
-    if (!header.success) {
+    // EventSource can't send headers, so the live stream passes ?cafeId= instead.
+    const query = request.query as Record<string, unknown> | undefined;
+    const requested = idSchema.safeParse(request.headers[CAFE_ID_HEADER] ?? query?.[CAFE_ID_QUERY]);
+    if (!requested.success) {
       throw new AppError(400, "VALIDATION_FAILED", `Header ${CAFE_ID_HEADER} is required`);
     }
-    if (!(await cafes.findById(header.data))) throw notFound("Café");
-    request.cafeId = header.data;
+    if (!(await cafes.findById(requested.data))) throw notFound("Café");
+    request.cafeId = requested.data;
   };
 }
 
