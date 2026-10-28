@@ -1,4 +1,5 @@
-import type { MenuProduct, MenuResponse } from "@siparis/shared";
+import type { CheckoutResponse, MenuProduct, MenuResponse } from "@siparis/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
@@ -12,6 +13,8 @@ import { CartBar } from "../cart/CartBar";
 import { useCart } from "../cart/cart-context";
 import { CartProvider } from "../cart/CartProvider";
 import { CartSheet } from "../cart/CartSheet";
+import { CheckoutSheet } from "../checkout/CheckoutSheet";
+import { OrderSuccess } from "../checkout/OrderSuccess";
 import styles from "./MenuPage.module.css";
 import { ProductCard } from "./ProductCard";
 import { ProductSheet } from "./ProductSheet";
@@ -57,20 +60,25 @@ export function MenuPage() {
 
   return (
     <CartProvider qrToken={qrToken}>
-      <Menu menu={menu.data} />
+      <Menu qrToken={qrToken} menu={menu.data} />
     </CartProvider>
   );
 }
 
 type OpenSheet =
-  { kind: "product"; product: MenuProduct; editing?: CartLine } | { kind: "cart" } | null;
+  | { kind: "product"; product: MenuProduct; editing?: CartLine }
+  | { kind: "cart"; notice?: string }
+  | { kind: "checkout" }
+  | null;
 
-function Menu({ menu }: { menu: MenuResponse }) {
+function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
   const { t } = useTranslation();
-  const { cart } = useCart();
+  const queryClient = useQueryClient();
+  const { cart, dispatch } = useCart();
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [sheet, setSheet] = useState<OpenSheet>(null);
+  const [placedOrder, setPlacedOrder] = useState<CheckoutResponse | null>(null);
 
   const categories = useMemo(
     () =>
@@ -95,6 +103,30 @@ function Menu({ menu }: { menu: MenuResponse }) {
     const product = products.get(line.productId);
     if (product) setSheet({ kind: "product", product, editing: line });
   };
+
+  const orderPlaced = (order: CheckoutResponse) => {
+    dispatch({ type: "clear" });
+    setSheet(null);
+    setPlacedOrder(order);
+    window.scrollTo({ top: 0 });
+  };
+  const cartChanged = () => {
+    // Reload the menu so the cart re-prices and flags the lines that changed.
+    void queryClient.invalidateQueries({ queryKey: ["menu", qrToken] });
+    setSheet({ kind: "cart", notice: t("cart.changed") });
+  };
+
+  if (placedOrder) {
+    return (
+      <div style={brandStyle(menu.cafe.primaryColor)}>
+        <OrderSuccess
+          order={placedOrder}
+          tableName={menu.table.name}
+          onBack={() => setPlacedOrder(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page} style={brandStyle(menu.cafe.primaryColor)}>
@@ -197,7 +229,22 @@ function Menu({ menu }: { menu: MenuResponse }) {
         />
       )}
       {sheet?.kind === "cart" && (
-        <CartSheet priced={priced} onEdit={editLine} onClose={() => setSheet(null)} />
+        <CartSheet
+          priced={priced}
+          notice={sheet.notice}
+          onEdit={editLine}
+          onCheckout={() => setSheet({ kind: "checkout" })}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === "checkout" && (
+        <CheckoutSheet
+          qrToken={qrToken}
+          priced={priced}
+          onBack={() => setSheet({ kind: "cart" })}
+          onSuccess={orderPlaced}
+          onCartChanged={cartChanged}
+        />
       )}
     </div>
   );

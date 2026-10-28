@@ -9,12 +9,16 @@ import styles from "./Cart.module.css";
 type CartSheetProps = {
   priced: PricedCart;
   onEdit: (line: CartLine) => void;
+  onCheckout: () => void;
   onClose: () => void;
+  /** Shown above the lines, e.g. when checkout found the cart out of date. */
+  notice?: string;
 };
 
-export function CartSheet({ priced, onEdit, onClose }: CartSheetProps) {
+export function CartSheet({ priced, onEdit, onCheckout, onClose, notice }: CartSheetProps) {
   const { t } = useTranslation();
   const { cart, dispatch } = useCart();
+  const canCheckout = priced.lines.length > 0 && !priced.hasInvalidLines;
 
   return (
     <Sheet
@@ -26,14 +30,23 @@ export function CartSheet({ priced, onEdit, onClose }: CartSheetProps) {
             <span>{t("cart.total")}</span>
             <strong>{formatKurus(priced.totalKurus)}</strong>
           </div>
-          {/* Payment is wired up in the next step. */}
-          <button type="button" className="btn btn-primary btn-block" disabled>
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            onClick={onCheckout}
+            disabled={!canCheckout}
+          >
             {t("cart.checkout")}
           </button>
-          <p className={styles.hint}>{t("cart.checkoutSoon")}</p>
+          {priced.hasInvalidLines && <p className={styles.hint}>{t("cart.fixInvalid")}</p>}
         </div>
       }
     >
+      {notice && (
+        <p className={styles.notice} role="alert">
+          {notice}
+        </p>
+      )}
       {priced.lines.length === 0 ? (
         <p className={styles.empty}>{t("cart.empty")}</p>
       ) : (

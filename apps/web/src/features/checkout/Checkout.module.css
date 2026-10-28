@@ -1,0 +1,158 @@
+.summary {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.summaryLines {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.summaryLines li,
+.summaryTotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.summaryTotal {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 1.0625rem;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.field input:focus {
+  border-color: var(--brand);
+  outline: none;
+}
+
+.field input[aria-invalid] {
+  border-color: var(--danger);
+}
+
+.fieldError {
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+.demoNotice {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.back {
+  margin-top: 12px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* Success screen */
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 100dvh;
+  padding: 32px var(--gutter);
+  text-align: center;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--brand-contrast);
+  font-size: 2.25rem;
+}
+
+.successTitle {
+  font-size: 1.625rem;
+  font-weight: 800;
+}
+
+.successText {
+  max-width: 34ch;
+  color: var(--text-muted);
+}
+
+.receipt {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin: 6px 0 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.receipt div {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.orderNumber {
+  font-size: 1.5rem;
+}
