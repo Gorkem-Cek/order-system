@@ -1,0 +1,70 @@
+// Turkish UI strings — the source of truth for keys. Menu content (product names etc.)
+// comes from the café and is not translated.
+export const tr = {
+  common: {
+    appName: "Siparİş",
+    tagline: "Masadan QR ile sipariş",
+    close: "Kapat",
+    retry: "Tekrar dene",
+    loading: "Yükleniyor…",
+    language: "Dil",
+    switchLanguage: "English",
+  },
+  menu: {
+    searchLabel: "Menüde ara",
+    searchPlaceholder: "Ürün ara…",
+    clearSearch: "Aramayı temizle",
+    categories: "Kategoriler",
+    noResults: "“{{query}}” için sonuç bulunamadı.",
+    unavailable: "Tükendi",
+    hasOptions: "Seçenekli",
+    notFoundTitle: "Masa bulunamadı",
+    notFoundText: "Bu QR kod geçersiz ya da artık kullanılmıyor. Lütfen garsona danışın.",
+    inactiveTitle: "Hizmet dışı",
+    inactiveText: "{{cafe}} şu anda online sipariş almıyor. Lütfen garsona danışın.",
+    errorTitle: "Menü yüklenemedi",
+    errorText: "İnternet bağlantınızı kontrol edip tekrar deneyin.",
+  },
+  product: {
+    required: "Zorunlu",
+    optional: "İsteğe bağlı",
+    chooseOne: "1 seçim yapın",
+    chooseExactly: "{{count}} seçim yapın",
+    chooseUpTo: "En fazla {{count}} seçim",
+    chooseBetween: "{{min}}–{{max}} seçim yapın",
+    optionUnavailable: "Tükendi",
+    note: "Ürün notu",
+    notePlaceholder: "Örn. şekersiz, az buzlu",
+    quantity: "Adet",
+    decrease: "Azalt",
+    increase: "Artır",
+    add: "Sepete ekle · {{price}}",
+    update: "Güncelle · {{price}}",
+    missingChoice: "Lütfen seçin: {{groups}}",
+  },
+  cart: {
+    view: "Sepeti gör",
+    items_one: "{{count}} ürün",
+    items_other: "{{count}} ürün",
+    title: "Sepetiniz",
+    empty: "Sepetiniz boş.",
+    edit: "Düzenle",
+    remove: "Kaldır",
+    lineInvalid: "Bu ürün artık bu haliyle sipariş edilemiyor. Lütfen düzenleyin ya da kaldırın.",
+    orderNote: "Sipariş notu",
+    orderNotePlaceholder: "Örn. hepsini aynı anda getirin",
+    total: "Toplam",
+    checkout: "Ödemeye geç",
+    checkoutSoon: "Ödeme adımı yakında eklenecek.",
+  },
+  home: {
+    text: "Masanızdaki QR kodu okutarak menüyü açabilirsiniz.",
+  },
+  notFound: {
+    title: "Sayfa bulunamadı",
+    text: "Aradığınız sayfa mevcut değil.",
+  },
+};
+
+/** The shape every language must provide. */
+export type Translation = typeof tr;

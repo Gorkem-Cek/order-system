@@ -1,0 +1,146 @@
+/* Cart bar */
+.bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  pointer-events: none;
+}
+
+.barButton {
+  pointer-events: auto;
+  width: 100%;
+  max-width: calc(var(--max-width) - 2 * var(--gutter));
+  min-height: 56px;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.barCount {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-contrast) 20%, transparent);
+  font-size: 0.875rem;
+}
+
+.barTotal {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cart sheet */
+.empty {
+  padding: 24px 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.line[data-invalid] .lineName {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.lineTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lineName {
+  font-weight: 600;
+}
+
+.linePrice {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lineOptions,
+.lineNote {
+  margin-top: 2px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.lineNote {
+  font-style: italic;
+}
+
+.lineError {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.lineActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.linkButton {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.noteLabel {
+  display: grid;
+  gap: 6px;
+  margin-top: 20px;
+  font-weight: 700;
+}
+
+.note {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-weight: 400;
+  resize: vertical;
+}
+
+.footer {
+  display: grid;
+  gap: 10px;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.125rem;
+}
+
+.total strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-align: center;
+}

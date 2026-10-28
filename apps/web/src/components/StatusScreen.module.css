@@ -1,0 +1,24 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100dvh;
+  padding: 32px var(--gutter);
+  text-align: center;
+}
+
+.icon {
+  font-size: 3rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.text {
+  max-width: 36ch;
+  color: var(--text-muted);
+}

@@ -4,7 +4,7 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 
 ## Stack
 
-- **Language:** TypeScript (strict mode) everywhere, Node.js 22.12+ (24 LTS recommended)
+- **Language:** TypeScript (strict mode) everywhere, Node.js 22.22+ (24 LTS recommended)
 - **Monorepo:** npm workspaces — `apps/api` (backend), `apps/web` (frontend), `packages/shared` (shared types + zod schemas)
 - **API:** Fastify, PostgreSQL via Prisma, zod for request validation, SSE for real-time staff updates
 - **Web:** React + Vite, react-i18next (Turkish default, English toggle)
@@ -42,6 +42,9 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - Small, focused modules; route → service → repository layering in the API, grouped per feature in `apps/api/src/modules/<feature>/` (`*.routes.ts`, `*.service.ts`, `*.repository.ts`). Services receive repositories via factory functions; `buildApp({ config, prisma })` wires them.
 - Auth: DB-backed sessions in an httpOnly cookie. Guard routes with `requireUser`, `requireSuperAdmin` or `requireCafe` (staff routes; super-admin picks the café via the `X-Cafe-Id` header) from `apps/api/src/plugins/auth.ts`. Throw `AppError` (`apps/api/src/lib/errors.ts`) for expected errors.
 - API integration tests use `createTestContext()` from `apps/api/src/test/helpers.ts` against the real database.
+- Web: features live in `apps/web/src/features/<feature>/` (components + `*.module.css` + hooks); shared UI in `src/components`. Data fetching uses TanStack Query with `apiFetch` (`src/lib/api.ts`), which validates responses with the shared zod schemas. Routes are in `src/routes.tsx`.
+- Web UI text: add keys to `src/i18n/tr.ts` (source of truth, typed) and `src/i18n/en.ts`. Brand colour is applied via `brandStyle()` CSS variables (`--brand`, `--brand-contrast`).
+- Web tests render real routes with `renderRoute()` and stub `fetch` with `mockFetch()` (`src/test/render.tsx`).
 - Every new endpoint or service function gets tests in the same change.
 - Never commit secrets; config comes from `.env` (see `.env.example`).
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`).
