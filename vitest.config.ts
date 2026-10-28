@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
 import { defineConfig } from "vitest/config";
+
+// Local runs read DATABASE_URL etc. from the root .env; CI sets them directly.
+if (existsSync(".env")) process.loadEnvFile(".env");
 
 export default defineConfig({
   test: {

@@ -1,0 +1,211 @@
+// Data model for Siparİş — see docs/SPEC.md §6.
+// All money columns are integer kuruş. Every café-owned row carries cafeId.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  STAFF
+}
+
+enum OrderStatus {
+  NEW
+  PREPARING
+  SERVED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  REFUNDED
+}
+
+enum WaiterCallStatus {
+  OPEN
+  RESOLVED
+}
+
+model Cafe {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logoUrl      String?
+  coverUrl     String?
+  primaryColor String   @default("#7c4a2d")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users       User[]
+  tables      Table[]
+  categories  Category[]
+  products    Product[]
+  orders      Order[]
+  waiterCalls WaiterCall[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  // Null for SUPER_ADMIN. In the MVP each café has exactly one STAFF user (the shared login).
+  cafeId       String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cafe Cafe? @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+
+  @@index([cafeId])
+}
+
+model Table {
+  id        String   @id @default(cuid())
+  cafeId    String
+  name      String
+  // Random, unguessable token encoded in the table's QR code.
+  qrToken   String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cafe        Cafe         @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  waiterCalls WaiterCall[]
+
+  @@unique([cafeId, name])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  cafeId    String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cafe     Cafe      @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([cafeId, sortOrder])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  cafeId      String
+  categoryId  String
+  name        String
+  description String?
+  priceKurus  Int
+  imageUrl    String?
+  isAvailable Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  // Soft delete: keeps the row so past orders stay intact.
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  cafe         Cafe          @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  optionGroups OptionGroup[]
+  orderItems   OrderItem[]
+
+  @@index([cafeId, categoryId, sortOrder])
+}
+
+model OptionGroup {
+  id        String @id @default(cuid())
+  productId String
+  name      String
+  // Size: min 1 / max 1. Extras: min 0 / max N.
+  minSelect Int    @default(0)
+  maxSelect Int    @default(1)
+  sortOrder Int    @default(0)
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options Option[]
+
+  @@index([productId, sortOrder])
+}
+
+model Option {
+  id              String  @id @default(cuid())
+  optionGroupId   String
+  name            String
+  priceDeltaKurus Int     @default(0)
+  isAvailable     Boolean @default(true)
+  sortOrder       Int     @default(0)
+
+  optionGroup OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([optionGroupId, sortOrder])
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  cafeId        String
+  tableId       String?
+  // Snapshot so the order still shows its table after the table is deleted.
+  tableName     String
+  // Sequential per café per business day, starting at 1.
+  orderNumber   Int
+  orderDate     DateTime      @db.Date
+  status        OrderStatus   @default(NEW)
+  note          String?
+  totalKurus    Int
+  paymentStatus PaymentStatus @default(PAID)
+  paymentRef    String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  cafe  Cafe        @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  table Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  items OrderItem[]
+
+  @@unique([cafeId, orderDate, orderNumber])
+  @@index([cafeId, status, createdAt])
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  productId       String?
+  // Snapshots taken at checkout; later menu edits never change past orders.
+  productName     String
+  // Unit price including selected options.
+  unitPriceKurus  Int
+  quantity        Int
+  note            String?
+  // [{ group: string, option: string, priceDeltaKurus: number }]
+  selectedOptions Json    @default("[]")
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+model WaiterCall {
+  id         String           @id @default(cuid())
+  cafeId     String
+  tableId    String
+  status     WaiterCallStatus @default(OPEN)
+  createdAt  DateTime         @default(now())
+  resolvedAt DateTime?
+
+  cafe  Cafe  @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  table Table @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@index([cafeId, status, createdAt])
+  @@index([tableId, createdAt])
+}

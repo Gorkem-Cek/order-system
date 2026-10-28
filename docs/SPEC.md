@@ -67,8 +67,8 @@ All money is **integer kuruş** (₺12,50 = `1250`). Every café-owned row has a
 - **Product**: id, cafeId, categoryId, name, description?, priceKurus, imageUrl?, isAvailable, sortOrder, deletedAt? (soft delete keeps old orders intact)
 - **OptionGroup**: id, productId, name (e.g. "Boyut"), minSelect, maxSelect, sortOrder. Size = min 1 / max 1, extras = min 0 / max N.
 - **Option**: id, optionGroupId, name (e.g. "Büyük"), priceDeltaKurus, isAvailable, sortOrder
-- **Order**: id, cafeId, tableId, orderNumber (sequential per café per day), status, note?, totalKurus, paymentStatus, paymentRef, createdAt, updatedAt
-- **OrderItem**: id, orderId, productId, productName (snapshot), unitPriceKurus (snapshot incl. options), quantity, note?, selectedOptions (JSON snapshot: group name, option name, delta)
+- **Order**: id, cafeId, tableId? (set to null if the table is deleted), tableName (snapshot), orderNumber + orderDate (sequential per café per day, unique together), status, note?, totalKurus, paymentStatus, paymentRef, createdAt, updatedAt
+- **OrderItem**: id, orderId, productId? (set to null if the product is hard-deleted), productName (snapshot), unitPriceKurus (snapshot incl. options), quantity, note?, selectedOptions (JSON snapshot: group name, option name, delta)
 - **WaiterCall**: id, cafeId, tableId, status (`open` | `resolved`), createdAt, resolvedAt?
 
 Rules:

@@ -17,7 +17,12 @@
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:migrate": "npm run db:migrate -w @siparis/api --",
+    "db:deploy": "npm run db:deploy -w @siparis/api",
+    "db:seed": "npm run db:seed -w @siparis/api",
+    "db:reset": "npm run db:reset -w @siparis/api",
+    "db:studio": "npm run db:studio -w @siparis/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -34,6 +39,8 @@
     "vitest": "^5.0.5"
   },
   "allowScripts": {
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "@prisma/engines@7.10.1": true,
+    "prisma@7.10.1": true
   }
 }
