@@ -129,6 +129,30 @@ describe.skipIf(!hasDatabase)("GET /api/staff/events", () => {
     }
   });
 
+  it("streams waiter calls and their resolution", async () => {
+    const { table, cookie } = await setup();
+    const stream = await openStream(`${baseUrl}/api/staff/events`, cookie);
+    try {
+      await stream.next((m) => m.event === "ready");
+      await ctx.app.inject({ method: "POST", url: `/api/menu/${table.qrToken}/waiter-call` });
+      const called = staffEventSchema.parse((await stream.next(isEvent("waiterCall.called"))).data);
+      expect(called).toMatchObject({ call: { tableName: "Masa 7", callCount: 1 } });
+      if (called.type !== "waiterCall.called") throw new Error("unexpected event");
+
+      await ctx.app.inject({
+        method: "POST",
+        url: `/api/staff/waiter-calls/${called.call.id}/resolve`,
+        headers: { cookie },
+      });
+      expect((await stream.next(isEvent("waiterCall.resolved"))).data).toEqual({
+        type: "waiterCall.resolved",
+        callId: called.call.id,
+      });
+    } finally {
+      stream.close();
+    }
+  });
+
   it("never sends another café's orders", async () => {
     const mine = await setup();
     const other = await setup();

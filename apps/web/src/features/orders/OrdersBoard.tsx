@@ -6,9 +6,12 @@ import { StatusScreen } from "../../components/StatusScreen";
 import { createChime } from "../../lib/chime";
 import { readStorage, writeStorage } from "../../lib/storage";
 import { useStaff } from "../staff/staff-context";
+import { useStaffStream } from "../staff/useStaffStream";
+import { useOpenWaiterCalls } from "../waiter-calls/useWaiterCalls";
+import { WaiterCallsPanel } from "../waiter-calls/WaiterCallsPanel";
 import { OrderCard } from "./OrderCard";
 import styles from "./OrdersBoard.module.css";
-import { activeOrdersKey, useActiveOrders, useOrderStream } from "./useOrders";
+import { activeOrdersKey, useActiveOrders } from "./useOrders";
 
 const MUTE_KEY = "siparis.board.muted";
 /** How long a newly arrived order stays highlighted if nobody touches it. */
@@ -30,6 +33,7 @@ export function OrdersBoard() {
   const { cafe } = useStaff();
   const queryClient = useQueryClient();
   const orders = useActiveOrders();
+  const waiterCalls = useOpenWaiterCalls();
   const now = useNow(30_000);
 
   const [chime] = useState(createChime);
@@ -37,9 +41,14 @@ export function OrdersBoard() {
   const [muted, setMuted] = useState(() => readStorage(MUTE_KEY) === "1");
   const [freshUntil, setFreshUntil] = useState<Record<string, number>>({});
 
-  const stream = useOrderStream((order: Order) => {
-    setFreshUntil((current) => ({ ...current, [order.id]: Date.now() + FRESH_MS }));
-    if (!muted) chime.play();
+  const stream = useStaffStream({
+    onOrderCreated: (order: Order) => {
+      setFreshUntil((current) => ({ ...current, [order.id]: Date.now() + FRESH_MS }));
+      if (!muted) chime.play("order");
+    },
+    onWaiterCalled: () => {
+      if (!muted) chime.play("call");
+    },
   });
 
   const unhighlight = (orderId: string) =>
@@ -86,13 +95,14 @@ export function OrdersBoard() {
     );
   }
 
-  const newCount = byStatus.NEW.length;
+  // New orders plus open waiter calls: everything that needs someone's attention.
+  const attention = byStatus.NEW.length + (waiterCalls.data?.length ?? 0);
 
   return (
     <main className={styles.board}>
       <title>
-        {newCount > 0
-          ? `(${newCount}) ${t("board.title")} · ${cafe.name}`
+        {attention > 0
+          ? `(${attention}) ${t("board.title")} · ${cafe.name}`
           : `${t("board.title")} · ${cafe.name}`}
       </title>
 
@@ -114,6 +124,8 @@ export function OrdersBoard() {
             </button>
           ))}
       </div>
+
+      <WaiterCallsPanel calls={waiterCalls.data ?? []} now={now} />
 
       <div className={styles.columns}>
         {COLUMNS.map((status) => (

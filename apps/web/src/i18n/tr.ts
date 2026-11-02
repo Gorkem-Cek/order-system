@@ -92,6 +92,20 @@ export const tr = {
     paid: "Ödenen tutar",
     backToMenu: "Menüye dön",
   },
+  waiter: {
+    call: "Garson çağır",
+    wait: "{{seconds}} sn",
+    waitLabel: "Garson çağrıldı. Tekrar çağırmak için {{seconds}} saniye bekleyin.",
+    called: "Garson çağrıldı! Birazdan masanızda olacak.",
+    alreadyCalled: "Garson az önce çağrıldı, birazdan masanızda olacak.",
+    error: "Garson çağrılamadı. Lütfen tekrar deneyin.",
+  },
+  waiterCalls: {
+    title: "Garson çağrıları",
+    calling: "{{table}} garson çağırıyor",
+    repeat: "{{count}}. çağrı",
+    done: "Tamam",
+  },
   login: {
     title: "Personel girişi",
     subtitle: "Kafenizin hesabıyla giriş yapın.",

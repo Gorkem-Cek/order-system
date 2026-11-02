@@ -24,6 +24,12 @@ import {
   createMockPaymentProvider,
   type PaymentProvider,
 } from "./modules/payments/payment-provider";
+import { createWaiterCallsRepository } from "./modules/waiter-calls/waiter-calls.repository";
+import {
+  guestWaiterCallRoutes,
+  staffWaiterCallRoutes,
+} from "./modules/waiter-calls/waiter-calls.routes";
+import { createWaiterCallsService } from "./modules/waiter-calls/waiter-calls.service";
 import { authPlugin, createSessionCookie } from "./plugins/auth";
 import { registerErrorHandlers } from "./plugins/error-handler";
 import { healthRoutes } from "./routes/health";
@@ -57,6 +63,12 @@ export function buildApp(
     ...(now && { now }),
     log: app.log,
   });
+  const waiterCalls = createWaiterCallsService({
+    calls: createWaiterCallsRepository(prisma),
+    menuService,
+    events,
+    ...(now && { now }),
+  });
   const sessionCookie = createSessionCookie({ secure: config.NODE_ENV === "production" });
 
   registerErrorHandlers(app);
@@ -85,6 +97,12 @@ export function buildApp(
     ordersService,
     checkoutRateLimit: config.CHECKOUT_RATE_LIMIT,
   });
+  app.register(guestWaiterCallRoutes, {
+    prefix: "/api/menu",
+    waiterCalls,
+    rateLimit: config.CHECKOUT_RATE_LIMIT,
+  });
+  app.register(staffWaiterCallRoutes, { prefix: "/api/staff", cafes, waiterCalls });
 
   return app;
 }

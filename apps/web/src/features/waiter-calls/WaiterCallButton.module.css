@@ -1,0 +1,47 @@
+.button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.button:disabled {
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.message {
+  grid-column: 1 / -1;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: #ecfdf3;
+  color: #05603a;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.message[data-error] {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* On narrow phones show just the bell to leave room for the search box. */
+@media (max-width: 360px) {
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}

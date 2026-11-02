@@ -91,6 +91,20 @@ export const en: Translation = {
     paid: "Amount paid",
     backToMenu: "Back to menu",
   },
+  waiter: {
+    call: "Call waiter",
+    wait: "{{seconds}} s",
+    waitLabel: "Waiter called. Wait {{seconds}} seconds to call again.",
+    called: "The waiter has been called and will be with you shortly.",
+    alreadyCalled: "The waiter was just called and will be with you shortly.",
+    error: "Couldn't call the waiter. Please try again.",
+  },
+  waiterCalls: {
+    title: "Waiter calls",
+    calling: "{{table}} is calling a waiter",
+    repeat: "call #{{count}}",
+    done: "Done",
+  },
   login: {
     title: "Staff login",
     subtitle: "Sign in with your café's account.",
