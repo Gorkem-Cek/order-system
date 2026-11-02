@@ -13,6 +13,7 @@ import {
   type ProductForm,
 } from "./product-form";
 import styles from "./ProductEditor.module.css";
+import { ProductImageField } from "./ProductImageField";
 import type { MenuActions } from "./useStaffMenu";
 
 type ProductEditorProps = {
@@ -21,6 +22,8 @@ type ProductEditorProps = {
   /** The product being edited; a new one is created when missing. */
   product?: MenuProduct;
   saveProduct: MenuActions["saveProduct"];
+  uploadImage: MenuActions["uploadImage"];
+  removeImage: MenuActions["removeImage"];
   onClose: () => void;
 };
 
@@ -29,6 +32,8 @@ export function ProductEditor({
   categoryId,
   product,
   saveProduct,
+  uploadImage,
+  removeImage,
   onClose,
 }: ProductEditorProps) {
   const { t } = useTranslation();
@@ -98,6 +103,17 @@ export function ProductEditor({
       }
     >
       <form id={formId} className={styles.form} onSubmit={submit} noValidate>
+        {product ? (
+          <ProductImageField
+            productId={product.id}
+            productName={product.name}
+            imageUrl={product.imageUrl}
+            uploadImage={uploadImage}
+            removeImage={removeImage}
+          />
+        ) : (
+          <p className={styles.hint}>{t("productEditor.image.afterSave")}</p>
+        )}
         <div className={styles.field}>
           <label htmlFor={`${formId}-name`}>{t("productEditor.name")}</label>
           <input

@@ -23,6 +23,7 @@ const user: SessionUser = {
 };
 
 type Call = { method: string; url: string; body?: Record<string, unknown> };
+let uploads: File[];
 let menu: MenuCategory[];
 let calls: Call[];
 let idCounter: number;
@@ -36,12 +37,14 @@ beforeEach(() => {
   FakeEventSource.install();
   menu = structuredClone(menuFixture.categories);
   calls = [];
+  uploads = [];
   idCounter = 0;
   const newId = () => `cmnew${String(++idCounter).padStart(20, "0")}`;
 
   mockFetch((url, init) => {
     const method = init?.method ?? "GET";
-    const body = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const body = typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
+    if (init?.body instanceof FormData) uploads.push(init.body.get("image") as File);
     if (method !== "GET") calls.push({ method, url, body });
 
     if (url === "/api/auth/me") return { status: 200, body: user };
@@ -87,6 +90,13 @@ beforeEach(() => {
       };
       menu.find((c) => c.id === body.categoryId)?.products.push(product);
       return { status: 201, body: product };
+    }
+    const image = url.match(/^\/api\/staff\/products\/(\w+)\/image$/);
+    if (image) {
+      const target = findProduct(image[1] ?? "");
+      target.imageUrl =
+        method === "POST" ? `/uploads/cafes/c/products/${target.id}-new.webp` : null;
+      return { status: 200, body: target };
     }
     const product = url.match(/^\/api\/staff\/products\/(\w+)$/);
     if (product && method === "PUT") {
@@ -249,5 +259,45 @@ describe("menu management", () => {
         "Sıcak İçecekler",
       ]),
     );
+  });
+});
+
+describe("product photos", () => {
+  it("uploads a photo for an existing product and shows it", async () => {
+    const u = await openMenuAdmin();
+    await u.click(screen.getByRole("button", { name: "Düzenle: Latte" }));
+    const dialog = screen.getByRole("dialog", { name: "Ürünü düzenle" });
+
+    const photo = new File(["fake image"], "latte.jpg", { type: "image/jpeg" });
+    await u.upload(within(dialog).getByLabelText("Fotoğraf yükle"), photo);
+
+    const preview = await within(dialog).findByRole("img", { name: "Latte" });
+    expect(preview).toHaveAttribute("src", `/uploads/cafes/c/products/${ids.latte}-new.webp`);
+    expect(uploads.map((f) => f.name)).toEqual(["latte.jpg"]);
+    expect(calls).toContainEqual(
+      expect.objectContaining({ method: "POST", url: `/api/staff/products/${ids.latte}/image` }),
+    );
+
+    await u.click(within(dialog).getByRole("button", { name: "Fotoğrafı kaldır" }));
+    expect(await within(dialog).findByText("Fotoğraf yükle")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("img", { name: "Latte" })).not.toBeInTheDocument();
+  });
+
+  it("refuses files over 5 MB before uploading", async () => {
+    const u = await openMenuAdmin();
+    await u.click(screen.getByRole("button", { name: "Düzenle: Latte" }));
+    const dialog = screen.getByRole("dialog", { name: "Ürünü düzenle" });
+
+    const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "big.jpg", { type: "image/jpeg" });
+    await u.upload(within(dialog).getByLabelText("Fotoğraf yükle"), big);
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("en fazla 5 MB");
+    expect(uploads).toEqual([]);
+  });
+
+  it("asks to save a new product before adding a photo", async () => {
+    const u = await openMenuAdmin();
+    await u.click(within(section("Tatlılar")).getByRole("button", { name: "+ Ürün ekle" }));
+    expect(screen.getByText(/önce ürünü kaydedin/)).toBeInTheDocument();
   });
 });

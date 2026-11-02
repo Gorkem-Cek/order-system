@@ -8,6 +8,7 @@ import {
 } from "@siparis/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
+import { AppError } from "../../lib/errors";
 import { cafeIdOf, requireCafe } from "../../plugins/auth";
 import type { CafesRepository } from "../cafes/cafes.repository";
 import type { StaffMenuService } from "./staff-menu.service";
@@ -73,6 +74,19 @@ export const staffMenuRoutes: FastifyPluginAsync<{
     const { id } = paramsSchema.parse(request.params);
     const { isAvailable } = availabilityInputSchema.parse(request.body);
     return staffMenu.setAvailability(cafeIdOf(request), id, isAvailable);
+  });
+
+  // multipart/form-data with one file field; size is limited by the multipart plugin.
+  app.post("/products/:id/image", async (request) => {
+    const { id } = paramsSchema.parse(request.params);
+    const file = await request.file();
+    if (!file) throw new AppError(400, "VALIDATION_FAILED", "Send one image file");
+    return staffMenu.setProductImage(cafeIdOf(request), id, await file.toBuffer());
+  });
+
+  app.delete("/products/:id/image", async (request) => {
+    const { id } = paramsSchema.parse(request.params);
+    return staffMenu.removeProductImage(cafeIdOf(request), id);
   });
 
   app.delete("/products/:id", async (request, reply) => {

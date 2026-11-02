@@ -11,6 +11,8 @@ const envSchema = z.object({
   LOGIN_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   // Checkout attempts allowed per IP and table per minute.
   CHECKOUT_RATE_LIMIT: z.coerce.number().int().positive().default(10),
+  // Where uploaded images are stored (relative to the API's working directory).
+  UPLOAD_DIR: z.string().min(1).default("uploads"),
 });
 
 export type Config = z.infer<typeof envSchema>;

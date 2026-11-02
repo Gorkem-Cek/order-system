@@ -14,6 +14,7 @@ describe("loadConfig", () => {
       SESSION_TTL_DAYS: 30,
       LOGIN_RATE_LIMIT: 10,
       CHECKOUT_RATE_LIMIT: 10,
+      UPLOAD_DIR: "uploads",
     });
   });
 

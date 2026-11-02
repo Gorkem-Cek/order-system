@@ -7,6 +7,7 @@ export default defineConfig({
     port: Number(process.env.WEB_PORT ?? 5173),
     proxy: {
       "/api": `http://localhost:${process.env.API_PORT ?? 3000}`,
+      "/uploads": `http://localhost:${process.env.API_PORT ?? 3000}`,
     },
   },
   test: {

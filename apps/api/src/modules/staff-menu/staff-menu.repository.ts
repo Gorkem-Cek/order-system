@@ -190,6 +190,10 @@ export function createStaffMenuRepository(prisma: PrismaClient) {
       });
     },
 
+    setImageUrl(id: string, imageUrl: string | null) {
+      return prisma.product.update({ where: { id }, data: { imageUrl }, include: productInclude });
+    },
+
     softDeleteProduct(id: string, at: Date) {
       return prisma.product.update({ where: { id }, data: { deletedAt: at } });
     },

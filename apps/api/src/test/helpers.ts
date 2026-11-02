@@ -1,6 +1,10 @@
 // Helpers for API integration tests. Each test file gets a random prefix and only creates
 // cafés and users under it, so files can run in parallel and clean up after themselves.
 import { randomUUID } from "node:crypto";
+import { mkdtempSync } from "node:fs";
+import { rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import type { LightMyRequestResponse } from "fastify";
 import { buildApp, type AppDeps } from "../app";
 import { loadConfig, type Config } from "../config";
@@ -23,6 +27,8 @@ export function createTestContext(
       ...process.env,
       LOGIN_RATE_LIMIT: "1000",
       CHECKOUT_RATE_LIMIT: "1000",
+      // Each test file stores uploads in its own temporary folder.
+      UPLOAD_DIR: mkdtempSync(path.join(tmpdir(), "siparis-uploads-")),
     }),
     ...overrides,
   };
@@ -145,6 +151,7 @@ export function createTestContext(
       await prisma.cafe.deleteMany({ where: { slug: { startsWith: prefix } } });
       await prisma.user.deleteMany({ where: { email: { endsWith: `@${prefix}.test` } } });
       await prisma.$disconnect();
+      await rm(config.UPLOAD_DIR, { recursive: true, force: true });
     },
   };
 }

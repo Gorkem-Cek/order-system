@@ -215,6 +215,17 @@ export const tr = {
     removeGroup: "Grubu kaldır",
     save: "Kaydet",
     saving: "Kaydediliyor…",
+    image: {
+      label: "Fotoğraf (isteğe bağlı)",
+      upload: "Fotoğraf yükle",
+      replace: "Fotoğrafı değiştir",
+      remove: "Fotoğrafı kaldır",
+      uploading: "Yükleniyor…",
+      hint: "JPEG, PNG ya da WebP, en fazla 5 MB. Hemen kaydedilir.",
+      afterSave: "Fotoğraf eklemek için önce ürünü kaydedin, sonra Düzenle'ye tıklayın.",
+      tooLarge: "Fotoğraf en fazla 5 MB olabilir.",
+      unsupported: "Bu dosya bir fotoğraf değil ya da biçimi desteklenmiyor.",
+    },
     errors: {
       name: "Ürün adını girin.",
       price: "Geçerli bir fiyat girin (örn. 120,50).",
