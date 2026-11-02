@@ -32,10 +32,15 @@ export function createChime() {
       await ctx.resume();
       return ctx.state === "running";
     },
-    play(): void {
+    /** "order": a rising two-note chime. "call": three quick high beeps (waiter call). */
+    play(kind: "order" | "call" = "order"): void {
       const ctx = context;
       if (!ctx || ctx.state !== "running") return;
       const now = ctx.currentTime;
+      if (kind === "call") {
+        for (let i = 0; i < 3; i++) tone(ctx, 1568, now + i * 0.16, 0.12);
+        return;
+      }
       tone(ctx, 880, now, 0.18);
       tone(ctx, 1318.5, now + 0.16, 0.28);
     },

@@ -1,4 +1,10 @@
-import { CAFE_ID_HEADER, type Order, type SessionUser, type StaffCafe } from "@siparis/shared";
+import {
+  CAFE_ID_HEADER,
+  type Order,
+  type SessionUser,
+  type StaffCafe,
+  type WaiterCall,
+} from "@siparis/shared";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -56,6 +62,7 @@ type Request = { url: string; method: string; headers: Record<string, string>; b
 
 let session: SessionUser | null;
 let orders: Order[];
+let calls: WaiterCall[];
 let requests: Request[];
 let patchResponse: (order: Order, status: string) => { status: number; body: unknown };
 
@@ -65,6 +72,7 @@ beforeEach(() => {
   orderCounter = 0;
   session = staffUser;
   orders = [];
+  calls = [];
   requests = [];
   patchResponse = (order, status) => ({ status: 200, body: { ...order, status } });
 
@@ -107,6 +115,12 @@ beforeEach(() => {
     }
     if (url === "/api/staff/cafe") return { status: 200, body: cafe };
     if (url === "/api/staff/orders") return { status: 200, body: { orders } };
+    if (url === "/api/staff/waiter-calls") return { status: 200, body: { calls } };
+    const resolveCall = url.match(/^\/api\/staff\/waiter-calls\/(\w+)\/resolve$/);
+    if (resolveCall && method === "POST") {
+      calls = calls.filter((c) => c.id !== resolveCall[1]);
+      return { status: 204 };
+    }
     const patch = url.match(/^\/api\/staff\/orders\/(\w+)\/status$/);
     if (patch && method === "PATCH") {
       const order = orders.find((o) => o.id === patch[1]);
@@ -276,5 +290,61 @@ describe("super-admin", () => {
     expect(
       await screen.findByRole("heading", { name: "Hangi kafeyi açmak istiyorsunuz?" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("waiter calls on the board", () => {
+  const makeCall = (overrides: Partial<WaiterCall> = {}): WaiterCall => {
+    const at = new Date(Date.now() - 2 * 60_000).toISOString();
+    return {
+      id: "cmcal00000000000000000001",
+      tableName: "Masa 5",
+      createdAt: at,
+      lastCalledAt: at,
+      callCount: 1,
+      ...overrides,
+    };
+  };
+
+  it("lists open calls and resolves them", async () => {
+    calls = [makeCall()];
+    const user = await openBoard();
+
+    const panel = await screen.findByRole("region", { name: /Garson çağrıları/ });
+    expect(within(panel).getByText("Masa 5 garson çağırıyor")).toBeInTheDocument();
+    expect(within(panel).getByText(/2 dk önce/)).toBeInTheDocument();
+    expect(document.title).toBe("(1) Siparişler · Demo Kafe");
+
+    await user.click(within(panel).getByRole("button", { name: "Tamam: Masa 5" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: /Garson çağrıları/ })).not.toBeInTheDocument(),
+    );
+    expect(requests.some((r) => r.url.endsWith("/resolve") && r.method === "POST")).toBe(true);
+  });
+
+  it("shows live calls, repeats and resolutions from other screens", async () => {
+    await openBoard();
+    const stream = FakeEventSource.latest();
+    act(() => stream.emit("ready"));
+    await screen.findByText("Canlı");
+
+    const call = makeCall({ createdAt: new Date().toISOString() });
+    act(() => stream.emit("waiterCall.called", { type: "waiterCall.called", call }));
+    const panel = await screen.findByRole("region", { name: /Garson çağrıları/ });
+    expect(within(panel).getByText("Masa 5 garson çağırıyor")).toBeInTheDocument();
+
+    act(() =>
+      stream.emit("waiterCall.called", {
+        type: "waiterCall.called",
+        call: { ...call, callCount: 2 },
+      }),
+    );
+    expect(await within(panel).findByText(/2\. çağrı/)).toBeInTheDocument();
+    expect(within(panel).getAllByRole("listitem")).toHaveLength(1);
+
+    act(() => stream.emit("waiterCall.resolved", { type: "waiterCall.resolved", callId: call.id }));
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: /Garson çağrıları/ })).not.toBeInTheDocument(),
+    );
   });
 });

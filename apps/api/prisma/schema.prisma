@@ -213,13 +213,17 @@ model WaiterCall {
   id         String           @id @default(cuid())
   cafeId     String
   tableId    String
-  status     WaiterCallStatus @default(OPEN)
-  createdAt  DateTime         @default(now())
-  resolvedAt DateTime?
+  status       WaiterCallStatus @default(OPEN)
+  createdAt    DateTime         @default(now())
+  // A table has at most one open call; pressing again (after the cooldown) re-alerts staff
+  // and bumps these instead of creating a second call.
+  lastCalledAt DateTime         @default(now())
+  callCount    Int              @default(1)
+  resolvedAt   DateTime?
 
   cafe  Cafe  @relation(fields: [cafeId], references: [id], onDelete: Cascade)
   table Table @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   @@index([cafeId, status, createdAt])
-  @@index([tableId, createdAt])
+  @@index([tableId, status])
 }

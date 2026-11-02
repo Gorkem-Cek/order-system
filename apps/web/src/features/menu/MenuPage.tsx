@@ -15,6 +15,7 @@ import { CartProvider } from "../cart/CartProvider";
 import { CartSheet } from "../cart/CartSheet";
 import { CheckoutSheet } from "../checkout/CheckoutSheet";
 import { OrderSuccess } from "../checkout/OrderSuccess";
+import { WaiterCallButton } from "../waiter-calls/WaiterCallButton";
 import styles from "./MenuPage.module.css";
 import { ProductCard } from "./ProductCard";
 import { ProductSheet } from "./ProductSheet";
@@ -145,30 +146,33 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
       </header>
 
       <div className={styles.toolbar}>
-        <label className={styles.search}>
-          <span className="visually-hidden">{t("menu.searchLabel")}</span>
-          <span className={styles.searchIcon} aria-hidden="true">
-            ⌕
-          </span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("menu.searchPlaceholder")}
-            autoComplete="off"
-            enterKeyHint="search"
-          />
-          {query && (
-            <button
-              type="button"
-              className={styles.clearSearch}
-              onClick={() => setQuery("")}
-              aria-label={t("menu.clearSearch")}
-            >
-              ×
-            </button>
-          )}
-        </label>
+        <div className={styles.searchRow}>
+          <label className={styles.search}>
+            <span className="visually-hidden">{t("menu.searchLabel")}</span>
+            <span className={styles.searchIcon} aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("menu.searchPlaceholder")}
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+            {query && (
+              <button
+                type="button"
+                className={styles.clearSearch}
+                onClick={() => setQuery("")}
+                aria-label={t("menu.clearSearch")}
+              >
+                ×
+              </button>
+            )}
+          </label>
+          <WaiterCallButton qrToken={qrToken} />
+        </div>
         {categories.length > 1 && (
           <nav className={styles.categoryNav} aria-label={t("menu.categories")}>
             {categories.map((category) => (

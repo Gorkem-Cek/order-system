@@ -81,6 +81,12 @@
   border-bottom: 1px solid var(--border);
 }
 
+.searchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
 .search {
   display: flex;
   align-items: center;

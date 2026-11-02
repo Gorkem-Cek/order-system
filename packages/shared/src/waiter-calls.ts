@@ -4,7 +4,8 @@ import { idSchema } from "./common";
 /** A table can call the waiter at most once per this many seconds. */
 export const WAITER_CALL_COOLDOWN_SECONDS = 60;
 
-// POST /api/menu/:qrToken/waiter-call (no body; the table comes from the QR token)
+// POST /api/menu/:qrToken/waiter-call (no body; the table comes from the QR token).
+// While cooling down the API answers 429 WAITER_CALL_COOLDOWN with details.retryAfterSeconds.
 export const waiterCallResponseSchema = z.object({
   cooldownSeconds: z.int().nonnegative(),
 });
@@ -14,6 +15,10 @@ export const waiterCallSchema = z.object({
   id: idSchema,
   tableName: z.string(),
   createdAt: z.iso.datetime(),
+  /** When the guest last pressed the button; later than createdAt after a repeat call. */
+  lastCalledAt: z.iso.datetime(),
+  /** How many times the guest has pressed the button for this call. */
+  callCount: z.int().positive(),
 });
 
 export const openWaiterCallsResponseSchema = z.object({ calls: z.array(waiterCallSchema) });
