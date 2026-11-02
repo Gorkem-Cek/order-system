@@ -27,7 +27,8 @@ export async function apiFetch<T>(
       credentials: "same-origin",
       ...init,
       headers: {
-        ...(init.body !== undefined && { "content-type": "application/json" }),
+        // FormData (uploads) sets its own multipart content type.
+        ...(typeof init.body === "string" && { "content-type": "application/json" }),
         ...init.headers,
       },
     });

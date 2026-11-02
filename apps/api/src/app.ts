@@ -1,10 +1,13 @@
 import cookie from "@fastify/cookie";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
+import { MAX_IMAGE_BYTES } from "@siparis/shared";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import type { Config } from "./config";
 import type { PrismaClient } from "./db";
 import { AppError } from "./lib/errors";
 import { createEventBus } from "./lib/event-bus";
+import { createLocalStorage, UPLOADS_PATH } from "./lib/storage";
 import { createAuthService } from "./modules/auth/auth.service";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { createSessionsRepository } from "./modules/auth/sessions.repository";
@@ -36,6 +39,7 @@ import { createWaiterCallsService } from "./modules/waiter-calls/waiter-calls.se
 import { authPlugin, createSessionCookie } from "./plugins/auth";
 import { registerErrorHandlers } from "./plugins/error-handler";
 import { healthRoutes } from "./routes/health";
+import { uploadsRoutes } from "./routes/uploads";
 
 export type AppDeps = {
   config: Config;
@@ -56,11 +60,13 @@ export function buildApp(
   const cafes = createCafesRepository(prisma);
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
   const cafesService = createCafesService({ cafes, users, sessions });
+  const storage = createLocalStorage(config.UPLOAD_DIR);
   const menuRepository = createMenuRepository(prisma);
   const menuService = createMenuService({ menu: menuRepository });
   const staffMenu = createStaffMenuService({
     staffMenu: createStaffMenuRepository(prisma),
     menu: menuRepository,
+    storage,
     ...(now && { now }),
   });
   const events = createEventBus();
@@ -82,6 +88,7 @@ export function buildApp(
 
   registerErrorHandlers(app);
   app.register(cookie);
+  app.register(multipart, { limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 5 } });
   app.register(rateLimit, {
     global: false,
     errorResponseBuilder: (_request, context) =>
@@ -90,6 +97,7 @@ export function buildApp(
   app.register(authPlugin, { auth, cookie: sessionCookie });
 
   app.register(healthRoutes, { prefix: "/api" });
+  app.register(uploadsRoutes, { prefix: UPLOADS_PATH, storage });
   app.register(authRoutes, {
     prefix: "/api/auth",
     auth,

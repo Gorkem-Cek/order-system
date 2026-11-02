@@ -1,5 +1,7 @@
 import type { MenuCategory, MenuProduct, ProductInput } from "@siparis/shared";
 import { AppError, notFound } from "../../lib/errors";
+import { processImage } from "../../lib/images";
+import { newImageKey, type FileStorage } from "../../lib/storage";
 import type { MenuRepository } from "../menu/menu.repository";
 import { toMenuCategory, toMenuProduct } from "../menu/menu.service";
 import type { StaffMenuRepository } from "./staff-menu.repository";
@@ -15,9 +17,10 @@ function assertSameIds(ids: string[], expected: string[]) {
 export function createStaffMenuService(deps: {
   staffMenu: StaffMenuRepository;
   menu: MenuRepository;
+  storage: FileStorage;
   now?: () => Date;
 }) {
-  const { staffMenu, menu } = deps;
+  const { staffMenu, menu, storage } = deps;
   const now = deps.now ?? (() => new Date());
 
   const categoryOf = async (cafeId: string, id: string) => {
@@ -88,6 +91,27 @@ export function createStaffMenuService(deps: {
     async setAvailability(cafeId: string, id: string, isAvailable: boolean): Promise<MenuProduct> {
       await productOf(cafeId, id);
       return toMenuProduct(await staffMenu.setAvailability(id, isAvailable));
+    },
+
+    /** Replaces the product's photo; the old file is deleted once the new one is in place. */
+    async setProductImage(cafeId: string, id: string, upload: Buffer): Promise<MenuProduct> {
+      const product = await productOf(cafeId, id);
+      const image = await processImage(upload);
+      const url = await storage.put(
+        newImageKey(`cafes/${cafeId}/products`, id),
+        image.data,
+        image.contentType,
+      );
+      const updated = await staffMenu.setImageUrl(id, url);
+      if (product.imageUrl) await storage.removeByUrl(product.imageUrl);
+      return toMenuProduct(updated);
+    },
+
+    async removeProductImage(cafeId: string, id: string): Promise<MenuProduct> {
+      const product = await productOf(cafeId, id);
+      const updated = await staffMenu.setImageUrl(id, null);
+      if (product.imageUrl) await storage.removeByUrl(product.imageUrl);
+      return toMenuProduct(updated);
     },
 
     /** Soft delete: the product leaves the menu but past orders keep pointing at it. */

@@ -25,7 +25,7 @@ const json = (method: string, body: unknown): RequestInit => ({
 });
 
 /** A menu change that reloads the menu when it's done (also after a failure). */
-function useMenuMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
+function useMenuMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>) {
   const { cafe } = useStaff();
   const queryClient = useQueryClient();
   return useMutation({
@@ -93,6 +93,14 @@ export function useMenuActions() {
           json("PATCH", { isAvailable }),
         );
       },
+    ),
+    uploadImage: useMenuMutation(({ id, file }: { id: string; file: File }) => {
+      const body = new FormData();
+      body.append("image", file);
+      return staffFetch(`/staff/products/${id}/image`, menuProductSchema, { method: "POST", body });
+    }),
+    removeImage: useMenuMutation((id: string) =>
+      staffFetch(`/staff/products/${id}/image`, menuProductSchema, { method: "DELETE" }),
     ),
     deleteProduct: useMenuMutation((id: string) =>
       staffFetch(`/staff/products/${id}`, z.undefined(), { method: "DELETE" }),

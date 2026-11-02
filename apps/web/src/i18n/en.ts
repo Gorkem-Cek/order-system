@@ -214,6 +214,17 @@ export const en: Translation = {
     removeGroup: "Remove group",
     save: "Save",
     saving: "Saving…",
+    image: {
+      label: "Photo (optional)",
+      upload: "Upload photo",
+      replace: "Replace photo",
+      remove: "Remove photo",
+      uploading: "Uploading…",
+      hint: "JPEG, PNG or WebP, up to 5 MB. Saved right away.",
+      afterSave: "To add a photo, save the product first, then click Edit.",
+      tooLarge: "The photo can be at most 5 MB.",
+      unsupported: "This file isn't a photo or its format isn't supported.",
+    },
     errors: {
       name: "Enter the product name.",
       price: "Enter a valid price (e.g. 120,50).",

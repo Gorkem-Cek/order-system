@@ -35,3 +35,6 @@ npm-debug.log*
 
 # Generated code
 apps/api/src/generated/
+
+# Uploaded images (local storage in development)
+apps/api/uploads/

@@ -109,6 +109,8 @@ export function MenuAdminPage() {
           categoryId={editing.categoryId}
           product={editing.product}
           saveProduct={actions.saveProduct}
+          uploadImage={actions.uploadImage}
+          removeImage={actions.removeImage}
           onClose={() => {
             actions.saveProduct.reset();
             setEditing(null);
@@ -260,6 +262,9 @@ function CategorySection({
               data-sold-out={!product.isAvailable || undefined}
             >
               <div className={styles.productText}>
+                {product.imageUrl && (
+                  <img className={styles.thumb} src={product.imageUrl} alt="" loading="lazy" />
+                )}
                 <span className={styles.productName}>{product.name}</span>
                 <span className={styles.productMeta}>
                   {formatKurus(product.priceKurus)}
