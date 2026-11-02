@@ -13,6 +13,11 @@ const envSchema = z.object({
   CHECKOUT_RATE_LIMIT: z.coerce.number().int().positive().default(10),
   // Where uploaded images are stored (relative to the API's working directory).
   UPLOAD_DIR: z.string().min(1).default("uploads"),
+  // Public address of the web app; table QR codes link to <PUBLIC_URL>/m/<qrToken>.
+  PUBLIC_URL: z
+    .url({ protocol: /^https?$/ })
+    .default("http://localhost:5173")
+    .transform((url) => url.replace(/\/+$/, "")),
 });
 
 export type Config = z.infer<typeof envSchema>;
