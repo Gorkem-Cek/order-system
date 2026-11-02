@@ -2,7 +2,7 @@ import { adminCafesResponseSchema, CAFE_ID_QUERY, staffCafeSchema } from "@sipar
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet, useNavigate } from "react-router";
+import { Navigate, NavLink, Outlet, useNavigate } from "react-router";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import { StatusScreen } from "../../components/StatusScreen";
 import { apiFetch } from "../../lib/api";
@@ -121,9 +121,12 @@ function StaffShell({
             {!cafe.data.isActive && <span className={styles.inactive}>{t("staff.inactive")}</span>}
           </div>
           <nav className={styles.nav} aria-label={t("staff.navigation")}>
-            <span className={styles.navLink} aria-current="page">
+            <NavLink to="/staff" end className={styles.navLink}>
               {t("staff.nav.orders")}
-            </span>
+            </NavLink>
+            <NavLink to="/staff/menu" className={styles.navLink}>
+              {t("staff.nav.menu")}
+            </NavLink>
           </nav>
           <div className={styles.actions}>
             {onSwitchCafe && (
