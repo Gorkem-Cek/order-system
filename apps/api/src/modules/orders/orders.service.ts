@@ -9,6 +9,7 @@ import {
 } from "@siparis/shared";
 import { z } from "zod";
 import { businessDate } from "../../lib/business-date";
+import type { EventBus } from "../../lib/event-bus";
 import { AppError, notFound } from "../../lib/errors";
 import type { MenuService } from "../menu/menu.service";
 import type { PaymentProvider } from "../payments/payment-provider";
@@ -44,10 +45,11 @@ export function createOrdersService(deps: {
   orders: OrdersRepository;
   menuService: MenuService;
   payments: PaymentProvider;
+  events: EventBus;
   now?: () => Date;
   log?: { error: (obj: object, msg: string) => void };
 }) {
-  const { orders, menuService, payments } = deps;
+  const { orders, menuService, payments, events } = deps;
   const now = deps.now ?? (() => new Date());
 
   return {
@@ -111,6 +113,7 @@ export function createOrdersService(deps: {
         throw error;
       }
 
+      events.publish(table.cafeId, { type: "order.created", order: toOrder(order) });
       return { orderId: order.id, orderNumber: order.orderNumber, totalKurus: order.totalKurus };
     },
 
@@ -145,7 +148,9 @@ export function createOrdersService(deps: {
 
       const updated = await orders.findById(cafeId, orderId);
       if (!updated) throw notFound("Order");
-      return toOrder(updated);
+      const result = toOrder(updated);
+      events.publish(cafeId, { type: "order.updated", order: result });
+      return result;
     },
   };
 }

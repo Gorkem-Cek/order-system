@@ -3,6 +3,7 @@ export * from "./cafes";
 export * from "./checkout";
 export * from "./common";
 export * from "./errors";
+export * from "./events";
 export * from "./menu";
 export * from "./money";
 export * from "./orders";
