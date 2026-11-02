@@ -8,4 +8,5 @@ export * from "./menu";
 export * from "./money";
 export * from "./orders";
 export * from "./pricing";
+export * from "./staff-menu";
 export * from "./waiter-calls";

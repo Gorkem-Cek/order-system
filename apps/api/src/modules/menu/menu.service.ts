@@ -1,34 +1,35 @@
-import type { MenuCategory, MenuResponse } from "@siparis/shared";
+import type { MenuCategory, MenuProduct, MenuResponse } from "@siparis/shared";
 import { AppError, notFound } from "../../lib/errors";
 import type { MenuRepository } from "./menu.repository";
 
 type CategoryRow = Awaited<ReturnType<MenuRepository["findMenu"]>>[number];
+export type ProductRow = CategoryRow["products"][number];
 
-function toMenuCategory(category: CategoryRow): MenuCategory {
+export function toMenuProduct(product: ProductRow): MenuProduct {
   return {
-    id: category.id,
-    name: category.name,
-    products: category.products.map((product) => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      priceKurus: product.priceKurus,
-      imageUrl: product.imageUrl,
-      isAvailable: product.isAvailable,
-      optionGroups: product.optionGroups.map((group) => ({
-        id: group.id,
-        name: group.name,
-        minSelect: group.minSelect,
-        maxSelect: group.maxSelect,
-        options: group.options.map((option) => ({
-          id: option.id,
-          name: option.name,
-          priceDeltaKurus: option.priceDeltaKurus,
-          isAvailable: option.isAvailable,
-        })),
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    priceKurus: product.priceKurus,
+    imageUrl: product.imageUrl,
+    isAvailable: product.isAvailable,
+    optionGroups: product.optionGroups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      minSelect: group.minSelect,
+      maxSelect: group.maxSelect,
+      options: group.options.map((option) => ({
+        id: option.id,
+        name: option.name,
+        priceDeltaKurus: option.priceDeltaKurus,
+        isAvailable: option.isAvailable,
       })),
     })),
   };
+}
+
+export function toMenuCategory(category: CategoryRow): MenuCategory {
+  return { id: category.id, name: category.name, products: category.products.map(toMenuProduct) };
 }
 
 export function createMenuService(deps: { menu: MenuRepository }) {

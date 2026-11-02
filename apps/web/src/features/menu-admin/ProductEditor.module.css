@@ -1,0 +1,177 @@
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  align-content: start;
+}
+
+.field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--brand);
+  outline: none;
+}
+
+.field input[aria-invalid] {
+  border-color: var(--danger);
+}
+
+.narrow {
+  max-width: 130px;
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand);
+}
+
+.groups {
+  display: grid;
+  gap: 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.groupsTitle {
+  padding: 0;
+  font-weight: 800;
+}
+
+.hint {
+  margin-top: -6px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.group {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+}
+
+.groupHeader {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: end;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.option .check {
+  min-height: 42px;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 480px) {
+  .option {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.remove {
+  width: 36px;
+  height: 42px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  font-size: 1.25rem;
+}
+
+.remove:disabled {
+  opacity: 0.4;
+}
+
+.groupActions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.link {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.footer {
+  display: grid;
+  gap: 8px;
+}
+
+.saveError {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 600;
+}

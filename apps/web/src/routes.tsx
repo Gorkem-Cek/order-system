@@ -1,6 +1,7 @@
 import type { RouteObject } from "react-router";
 import { LoginPage } from "./features/auth/LoginPage";
 import { MenuPage } from "./features/menu/MenuPage";
+import { MenuAdminPage } from "./features/menu-admin/MenuAdminPage";
 import { OrdersBoard } from "./features/orders/OrdersBoard";
 import { StaffLayout } from "./features/staff/StaffLayout";
 import { HomePage } from "./pages/HomePage";
@@ -15,7 +16,10 @@ export const routes: RouteObject[] = [
   {
     path: "/staff",
     Component: StaffLayout,
-    children: [{ index: true, Component: OrdersBoard }],
+    children: [
+      { index: true, Component: OrdersBoard },
+      { path: "menu", Component: MenuAdminPage },
+    ],
   },
   { path: "*", Component: NotFoundPage },
 ];

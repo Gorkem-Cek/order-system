@@ -24,6 +24,9 @@ import {
   createMockPaymentProvider,
   type PaymentProvider,
 } from "./modules/payments/payment-provider";
+import { createStaffMenuRepository } from "./modules/staff-menu/staff-menu.repository";
+import { staffMenuRoutes } from "./modules/staff-menu/staff-menu.routes";
+import { createStaffMenuService } from "./modules/staff-menu/staff-menu.service";
 import { createWaiterCallsRepository } from "./modules/waiter-calls/waiter-calls.repository";
 import {
   guestWaiterCallRoutes,
@@ -53,7 +56,13 @@ export function buildApp(
   const cafes = createCafesRepository(prisma);
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
   const cafesService = createCafesService({ cafes, users, sessions });
-  const menuService = createMenuService({ menu: createMenuRepository(prisma) });
+  const menuRepository = createMenuRepository(prisma);
+  const menuService = createMenuService({ menu: menuRepository });
+  const staffMenu = createStaffMenuService({
+    staffMenu: createStaffMenuRepository(prisma),
+    menu: menuRepository,
+    ...(now && { now }),
+  });
   const events = createEventBus();
   const ordersService = createOrdersService({
     orders: createOrdersRepository(prisma),
@@ -103,6 +112,7 @@ export function buildApp(
     rateLimit: config.CHECKOUT_RATE_LIMIT,
   });
   app.register(staffWaiterCallRoutes, { prefix: "/api/staff", cafes, waiterCalls });
+  app.register(staffMenuRoutes, { prefix: "/api/staff", cafes, staffMenu });
 
   return app;
 }
