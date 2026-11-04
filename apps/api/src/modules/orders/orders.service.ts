@@ -1,10 +1,13 @@
 import {
   ACTIVE_ORDER_STATUSES,
+  ORDER_HISTORY_PAGE_SIZE,
   priceLine,
   selectedOptionSchema,
   type CheckoutRequest,
   type CheckoutResponse,
   type Order,
+  type OrderHistoryQuery,
+  type OrderHistoryResponse,
   type OrderStatus,
 } from "@siparis/shared";
 import { z } from "zod";
@@ -120,6 +123,20 @@ export function createOrdersService(deps: {
     /** Orders still on the live board (new and preparing), oldest first. */
     async listActive(cafeId: string): Promise<Order[]> {
       return (await orders.listByStatus(cafeId, [...ACTIVE_ORDER_STATUSES])).map(toOrder);
+    },
+
+    async listHistory(cafeId: string, query: OrderHistoryQuery): Promise<OrderHistoryResponse> {
+      const pageSize = ORDER_HISTORY_PAGE_SIZE;
+      const { rows, total } = await orders.listHistory(
+        cafeId,
+        {
+          ...(query.from && { from: new Date(`${query.from}T00:00:00.000Z`) }),
+          ...(query.to && { to: new Date(`${query.to}T00:00:00.000Z`) }),
+          ...(query.status && { status: query.status }),
+        },
+        { skip: (query.page - 1) * pageSize, take: pageSize },
+      );
+      return { orders: rows.map(toOrder), page: query.page, pageSize, total };
     },
 
     async updateStatus(cafeId: string, orderId: string, to: OrderStatus): Promise<Order> {

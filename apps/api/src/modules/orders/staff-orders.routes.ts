@@ -1,7 +1,9 @@
 import {
   idSchema,
+  orderHistoryQuerySchema,
   updateOrderStatusRequestSchema,
   type ActiveOrdersResponse,
+  type OrderHistoryResponse,
 } from "@siparis/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
@@ -21,6 +23,10 @@ export const staffOrdersRoutes: FastifyPluginAsync<{
   app.get("/orders", async (request): Promise<ActiveOrdersResponse> => ({
     orders: await ordersService.listActive(cafeIdOf(request)),
   }));
+
+  app.get("/orders/history", async (request): Promise<OrderHistoryResponse> =>
+    ordersService.listHistory(cafeIdOf(request), orderHistoryQuerySchema.parse(request.query)),
+  );
 
   app.patch("/orders/:id/status", async (request) => {
     const { id } = paramsSchema.parse(request.params);

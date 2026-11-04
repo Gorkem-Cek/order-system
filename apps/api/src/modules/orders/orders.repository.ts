@@ -66,6 +66,29 @@ export function createOrdersRepository(prisma: PrismaClient) {
       });
     },
 
+    /** One page of the café's orders, newest first, with the total number of matches. */
+    async listHistory(
+      cafeId: string,
+      filter: { from?: Date; to?: Date; status?: OrderStatus },
+      page: { skip: number; take: number },
+    ) {
+      const where = {
+        cafeId,
+        ...(filter.status && { status: filter.status }),
+        ...((filter.from || filter.to) && { orderDate: { gte: filter.from, lte: filter.to } }),
+      };
+      const [rows, total] = await prisma.$transaction([
+        prisma.order.findMany({
+          where,
+          orderBy: [{ orderDate: "desc" }, { orderNumber: "desc" }],
+          include: withItems,
+          ...page,
+        }),
+        prisma.order.count({ where }),
+      ]);
+      return { rows, total };
+    },
+
     /** Changes the status only if it is still `from`; returns whether it did. */
     async updateStatusIf(cafeId: string, id: string, from: OrderStatus, to: OrderStatus) {
       const { count } = await prisma.order.updateMany({
