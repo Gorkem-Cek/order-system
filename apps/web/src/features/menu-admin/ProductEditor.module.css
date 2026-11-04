@@ -163,54 +163,6 @@
   color: var(--danger);
 }
 
-.imageField {
-  display: grid;
-  gap: 6px;
-}
-
-.imageLabel {
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.imageRow {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.imagePreview,
-.imagePlaceholder {
-  width: 96px;
-  height: 96px;
-  flex: none;
-  border-radius: var(--radius);
-  object-fit: cover;
-}
-
-.imagePlaceholder {
-  display: grid;
-  place-items: center;
-  border: 1px dashed var(--border);
-  background: var(--surface-muted);
-  font-size: 1.75rem;
-}
-
-.imageActions {
-  display: grid;
-  justify-items: start;
-  gap: 6px;
-}
-
-.imageActions label[aria-disabled="true"] {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.imageActions .hint {
-  margin: 0;
-}
-
 .footer {
   display: grid;
   gap: 8px;

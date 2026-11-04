@@ -47,6 +47,7 @@ QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the 
 - Auth: DB-backed sessions in an httpOnly cookie. Guard routes with `requireUser`, `requireSuperAdmin` or `requireCafe` (staff routes; super-admin picks the café via the `X-Cafe-Id` header) from `apps/api/src/plugins/auth.ts`. Throw `AppError` (`apps/api/src/lib/errors.ts`) for expected errors.
 - API integration tests use `createTestContext()` from `apps/api/src/test/helpers.ts` against the real database.
 - Web: features live in `apps/web/src/features/<feature>/` (components + `*.module.css` + hooks); shared UI in `src/components`. Data fetching uses TanStack Query with `apiFetch` (`src/lib/api.ts`), which validates responses with the shared zod schemas. Routes are in `src/routes.tsx`.
+- Image uploads in the web app use `ImageField` (`src/components/ImageField.tsx`); it saves on pick and maps upload errors to messages.
 - Web UI text: add keys to `src/i18n/tr.ts` (source of truth, typed) and `src/i18n/en.ts`. Brand colour is applied via `brandStyle()` CSS variables (`--brand`, `--brand-contrast`).
 - Web tests render real routes with `renderRoute()`, stub `fetch` with `mockFetch()` and live events with `FakeEventSource` (`src/test/render.tsx`).
 - Staff pages render inside `StaffLayout` (`/staff`), which requires a login and provides `useStaff()` (user, café, `staffFetch` that adds `X-Cafe-Id` for a super-admin acting as a café). Print-only pages hide the top bar via `@media print`.

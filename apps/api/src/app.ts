@@ -62,8 +62,8 @@ export function buildApp(
   const sessions = createSessionsRepository(prisma);
   const cafes = createCafesRepository(prisma);
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
-  const cafesService = createCafesService({ cafes, users, sessions });
   const storage = createLocalStorage(config.UPLOAD_DIR);
+  const cafesService = createCafesService({ cafes, users, sessions, storage });
   const menuRepository = createMenuRepository(prisma);
   const menuService = createMenuService({ menu: menuRepository });
   const staffMenu = createStaffMenuService({

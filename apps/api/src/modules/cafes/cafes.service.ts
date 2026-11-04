@@ -1,6 +1,15 @@
-import type { AdminCafe, CreateCafeRequest, StaffCafe, UpdateCafeRequest } from "@siparis/shared";
+import type {
+  AdminCafe,
+  CafeImageKind,
+  CreateCafeRequest,
+  StaffCafe,
+  UpdateCafeRequest,
+  UpdateCafeSettingsRequest,
+} from "@siparis/shared";
 import { conflict, notFound } from "../../lib/errors";
+import { processImage } from "../../lib/images";
 import { hashPassword } from "../../lib/password";
+import { newImageKey, type FileStorage } from "../../lib/storage";
 import type { SessionsRepository } from "../auth/sessions.repository";
 import type { UsersRepository } from "../auth/users.repository";
 import type { CafesRepository } from "./cafes.repository";
@@ -39,12 +48,23 @@ function toStaffCafe(cafe: CafeRow): StaffCafe {
   };
 }
 
+/** Longest side of each stored café image: logos are shown small, covers span the screen. */
+const IMAGE_MAX_SIZE: Record<CafeImageKind, number> = { logo: 512, cover: 1600 };
+const IMAGE_FIELD = { logo: "logoUrl", cover: "coverUrl" } as const;
+
 export function createCafesService(deps: {
   cafes: CafesRepository;
   users: UsersRepository;
   sessions: SessionsRepository;
+  storage: FileStorage;
 }) {
-  const { cafes, users, sessions } = deps;
+  const { cafes, users, sessions, storage } = deps;
+
+  const cafeOf = async (id: string) => {
+    const cafe = await cafes.findById(id);
+    if (!cafe) throw notFound("Café");
+    return cafe;
+  };
 
   return {
     async list(): Promise<AdminCafe[]> {
@@ -84,9 +104,35 @@ export function createCafesService(deps: {
     },
 
     async getForStaff(id: string): Promise<StaffCafe> {
-      const cafe = await cafes.findById(id);
-      if (!cafe) throw notFound("Café");
-      return toStaffCafe(cafe);
+      return toStaffCafe(await cafeOf(id));
+    },
+
+    async updateSettings(id: string, input: UpdateCafeSettingsRequest): Promise<StaffCafe> {
+      await cafeOf(id);
+      return toStaffCafe(await cafes.updateBranding(id, input));
+    },
+
+    /** Replaces the logo or cover; the old file is deleted once the new one is in place. */
+    async setImage(id: string, kind: CafeImageKind, upload: Buffer): Promise<StaffCafe> {
+      const cafe = await cafeOf(id);
+      const image = await processImage(upload, { maxSize: IMAGE_MAX_SIZE[kind] });
+      const url = await storage.put(
+        newImageKey(`cafes/${id}`, kind),
+        image.data,
+        image.contentType,
+      );
+      const updated = await cafes.updateBranding(id, { [IMAGE_FIELD[kind]]: url });
+      const previous = cafe[IMAGE_FIELD[kind]];
+      if (previous) await storage.removeByUrl(previous);
+      return toStaffCafe(updated);
+    },
+
+    async removeImage(id: string, kind: CafeImageKind): Promise<StaffCafe> {
+      const cafe = await cafeOf(id);
+      const updated = await cafes.updateBranding(id, { [IMAGE_FIELD[kind]]: null });
+      const previous = cafe[IMAGE_FIELD[kind]];
+      if (previous) await storage.removeByUrl(previous);
+      return toStaffCafe(updated);
     },
   };
 }

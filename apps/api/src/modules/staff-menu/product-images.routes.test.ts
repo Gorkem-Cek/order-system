@@ -1,29 +1,7 @@
 import { MAX_IMAGE_BYTES, menuProductSchema, menuResponseSchema } from "@siparis/shared";
 import sharp from "sharp";
 import { afterAll, describe, expect, it } from "vitest";
-import { createTestContext, hasDatabase } from "../../test/helpers";
-
-/** Builds a multipart/form-data body with one file field, like a browser upload. */
-function multipart(data: Buffer, filename = "photo.jpg", contentType = "image/jpeg") {
-  const boundary = "----siparis-test-boundary";
-  const body = Buffer.concat([
-    Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${filename}"\r\n` +
-        `Content-Type: ${contentType}\r\n\r\n`,
-    ),
-    data,
-    Buffer.from(`\r\n--${boundary}--\r\n`),
-  ]);
-  return {
-    payload: body,
-    headers: { "content-type": `multipart/form-data; boundary=${boundary}` },
-  };
-}
-
-const jpeg = (width = 2400, height = 1600) =>
-  sharp({ create: { width, height, channels: 3, background: "#b06030" } })
-    .jpeg()
-    .toBuffer();
+import { createTestContext, hasDatabase, jpeg, multipart } from "../../test/helpers";
 
 describe.skipIf(!hasDatabase)("product images", () => {
   const ctx = createTestContext();

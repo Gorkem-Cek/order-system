@@ -50,6 +50,19 @@ export function createCafesRepository(prisma: PrismaClient) {
       });
     },
 
+    /** Branding the café's staff manage themselves (name, colour, logo, cover). */
+    updateBranding(
+      id: string,
+      data: {
+        name?: string;
+        primaryColor?: string;
+        logoUrl?: string | null;
+        coverUrl?: string | null;
+      },
+    ) {
+      return prisma.cafe.update({ where: { id }, data });
+    },
+
     /** Sets the password of every staff login of the café (one in the MVP). */
     updateStaffPasswordHash(cafeId: string, passwordHash: string) {
       return prisma.user
