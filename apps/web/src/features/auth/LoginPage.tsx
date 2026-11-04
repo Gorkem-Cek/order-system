@@ -13,7 +13,9 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  if (session.data) return <Navigate to="/staff" replace />;
+  if (session.data) {
+    return <Navigate to={session.data.role === "SUPER_ADMIN" ? "/admin" : "/staff"} replace />;
+  }
 
   const submit = (event: FormEvent) => {
     event.preventDefault();

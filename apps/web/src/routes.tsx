@@ -1,4 +1,5 @@
 import type { RouteObject } from "react-router";
+import { AdminCafesPage } from "./features/admin/AdminCafesPage";
 import { LoginPage } from "./features/auth/LoginPage";
 import { OrderHistoryPage } from "./features/history/OrderHistoryPage";
 import { MenuPage } from "./features/menu/MenuPage";
@@ -29,5 +30,7 @@ export const routes: RouteObject[] = [
       { path: "settings", Component: SettingsPage },
     ],
   },
+  // Super-admin: all cafés.
+  { path: "/admin", Component: AdminCafesPage },
   { path: "*", Component: NotFoundPage },
 ];
