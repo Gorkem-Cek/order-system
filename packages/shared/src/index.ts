@@ -10,4 +10,5 @@ export * from "./money";
 export * from "./orders";
 export * from "./pricing";
 export * from "./staff-menu";
+export * from "./tables";
 export * from "./waiter-calls";

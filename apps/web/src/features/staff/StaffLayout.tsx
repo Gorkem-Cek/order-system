@@ -127,6 +127,9 @@ function StaffShell({
             <NavLink to="/staff/menu" className={styles.navLink}>
               {t("staff.nav.menu")}
             </NavLink>
+            <NavLink to="/staff/tables" className={styles.navLink}>
+              {t("staff.nav.tables")}
+            </NavLink>
           </nav>
           <div className={styles.actions}>
             {onSwitchCafe && (

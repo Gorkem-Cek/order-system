@@ -132,3 +132,10 @@
   font-size: 0.875rem;
   color: var(--text-muted);
 }
+
+/* Printed pages (e.g. table QR codes) show only the page content. */
+@media print {
+  .topbar {
+    display: none;
+  }
+}

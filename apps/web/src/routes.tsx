@@ -4,6 +4,8 @@ import { MenuPage } from "./features/menu/MenuPage";
 import { MenuAdminPage } from "./features/menu-admin/MenuAdminPage";
 import { OrdersBoard } from "./features/orders/OrdersBoard";
 import { StaffLayout } from "./features/staff/StaffLayout";
+import { QrPrintPage } from "./features/tables/QrPrintPage";
+import { TablesPage } from "./features/tables/TablesPage";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
@@ -19,6 +21,8 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, Component: OrdersBoard },
       { path: "menu", Component: MenuAdminPage },
+      { path: "tables", Component: TablesPage },
+      { path: "tables/print", Component: QrPrintPage },
     ],
   },
   { path: "*", Component: NotFoundPage },

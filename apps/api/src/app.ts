@@ -30,6 +30,9 @@ import {
 import { createStaffMenuRepository } from "./modules/staff-menu/staff-menu.repository";
 import { staffMenuRoutes } from "./modules/staff-menu/staff-menu.routes";
 import { createStaffMenuService } from "./modules/staff-menu/staff-menu.service";
+import { createTablesRepository } from "./modules/tables/tables.repository";
+import { tablesRoutes } from "./modules/tables/tables.routes";
+import { createTablesService } from "./modules/tables/tables.service";
 import { createWaiterCallsRepository } from "./modules/waiter-calls/waiter-calls.repository";
 import {
   guestWaiterCallRoutes,
@@ -84,6 +87,11 @@ export function buildApp(
     events,
     ...(now && { now }),
   });
+  const tables = createTablesService({
+    tables: createTablesRepository(prisma),
+    events,
+    publicUrl: config.PUBLIC_URL,
+  });
   const sessionCookie = createSessionCookie({ secure: config.NODE_ENV === "production" });
 
   registerErrorHandlers(app);
@@ -121,6 +129,7 @@ export function buildApp(
   });
   app.register(staffWaiterCallRoutes, { prefix: "/api/staff", cafes, waiterCalls });
   app.register(staffMenuRoutes, { prefix: "/api/staff", cafes, staffMenu });
+  app.register(tablesRoutes, { prefix: "/api/staff/tables", cafes, tables });
 
   return app;
 }

@@ -1,0 +1,98 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.hint {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.empty {
+  padding: 40px 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Two cards per row on screen and on A4 paper. */
+.sheet {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  background: #fff;
+  color: #111;
+}
+
+.sheet[data-single] {
+  grid-template-columns: minmax(0, 360px);
+  justify-content: center;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10mm 8mm;
+  border: 1px dashed #bbb;
+  text-align: center;
+  break-inside: avoid;
+}
+
+.cafe {
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--brand);
+}
+
+.qr {
+  width: 55mm;
+  height: 55mm;
+}
+
+.table {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.scan {
+  font-weight: 600;
+}
+
+.scanEn {
+  font-size: 0.8125rem;
+  color: #555;
+}
+
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+@media print {
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .toolbar {
+    display: none;
+  }
+
+  .card {
+    /* Three rows of cards fill an A4 page. */
+    height: 92mm;
+    justify-content: center;
+    print-color-adjust: exact;
+  }
+}
