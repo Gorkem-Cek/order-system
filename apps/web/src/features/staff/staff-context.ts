@@ -12,6 +12,9 @@ export type StaffContextValue = {
   cafeQuery: string;
 };
 
+/** Query key of the café being managed (GET /api/staff/cafe). */
+export const staffCafeKey = (cafeId: string | null) => ["staff", cafeId, "cafe"] as const;
+
 export const StaffContext = createContext<StaffContextValue | null>(null);
 
 export function useStaff(): StaffContextValue {

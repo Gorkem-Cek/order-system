@@ -9,7 +9,12 @@ import { apiFetch } from "../../lib/api";
 import { brandStyle } from "../../lib/color";
 import { readStorage, removeStorage, writeStorage } from "../../lib/storage";
 import { useLogout, useSession } from "../auth/useSession";
-import { createStaffFetch, StaffContext, type StaffContextValue } from "./staff-context";
+import {
+  createStaffFetch,
+  StaffContext,
+  staffCafeKey,
+  type StaffContextValue,
+} from "./staff-context";
 import styles from "./StaffLayout.module.css";
 
 const ACTING_CAFE_KEY = "siparis.actingCafe";
@@ -78,7 +83,7 @@ function StaffShell({
   const logout = useLogout();
   const staffFetch = useMemo(() => createStaffFetch(actingCafeId), [actingCafeId]);
   const cafe = useQuery({
-    queryKey: ["staff", actingCafeId ?? user.cafeId, "cafe"],
+    queryKey: staffCafeKey(actingCafeId ?? user.cafeId),
     queryFn: () => staffFetch("/staff/cafe", staffCafeSchema),
   });
 
@@ -114,9 +119,13 @@ function StaffShell({
       <div className={styles.shell} style={brandStyle(cafe.data.primaryColor)}>
         <header className={styles.topbar}>
           <div className={styles.cafe}>
-            <span className={styles.logo} aria-hidden="true">
-              ☕
-            </span>
+            {cafe.data.logoUrl ? (
+              <img className={styles.logo} src={cafe.data.logoUrl} alt="" />
+            ) : (
+              <span className={styles.logo} aria-hidden="true">
+                ☕
+              </span>
+            )}
             <span className={styles.cafeName}>{cafe.data.name}</span>
             {!cafe.data.isActive && <span className={styles.inactive}>{t("staff.inactive")}</span>}
           </div>
@@ -129,6 +138,9 @@ function StaffShell({
             </NavLink>
             <NavLink to="/staff/tables" className={styles.navLink}>
               {t("staff.nav.tables")}
+            </NavLink>
+            <NavLink to="/staff/settings" className={styles.navLink}>
+              {t("staff.nav.settings")}
             </NavLink>
           </nav>
           <div className={styles.actions}>

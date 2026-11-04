@@ -66,3 +66,23 @@ export type ResetCafePasswordRequest = z.infer<typeof resetCafePasswordRequestSc
 export type AdminCafe = z.infer<typeof adminCafeSchema>;
 export type AdminCafesResponse = z.infer<typeof adminCafesResponseSchema>;
 export type StaffCafe = z.infer<typeof staffCafeSchema>;
+
+/** A #rrggbb colour; stored lowercase. */
+export const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Use a #rrggbb colour")
+  .transform((color) => color.toLowerCase());
+
+// PATCH /api/staff/cafe — branding the café's staff can change themselves.
+export const updateCafeSettingsRequestSchema = z
+  .object({ name: cafeNameSchema.optional(), primaryColor: hexColorSchema.optional() })
+  .refine((body) => body.name !== undefined || body.primaryColor !== undefined, {
+    message: "Nothing to update",
+  });
+export type UpdateCafeSettingsRequest = z.infer<typeof updateCafeSettingsRequestSchema>;
+
+// POST (multipart, one file) and DELETE /api/staff/cafe/images/:kind — both return the StaffCafe.
+export const CAFE_IMAGE_KINDS = ["logo", "cover"] as const;
+export const cafeImageKindSchema = z.enum(CAFE_IMAGE_KINDS);
+export type CafeImageKind = z.infer<typeof cafeImageKindSchema>;

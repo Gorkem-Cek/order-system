@@ -4,6 +4,7 @@ import { MenuPage } from "./features/menu/MenuPage";
 import { MenuAdminPage } from "./features/menu-admin/MenuAdminPage";
 import { OrdersBoard } from "./features/orders/OrdersBoard";
 import { StaffLayout } from "./features/staff/StaffLayout";
+import { SettingsPage } from "./features/settings/SettingsPage";
 import { QrPrintPage } from "./features/tables/QrPrintPage";
 import { TablesPage } from "./features/tables/TablesPage";
 import { HomePage } from "./pages/HomePage";
@@ -23,6 +24,7 @@ export const routes: RouteObject[] = [
       { path: "menu", Component: MenuAdminPage },
       { path: "tables", Component: TablesPage },
       { path: "tables/print", Component: QrPrintPage },
+      { path: "settings", Component: SettingsPage },
     ],
   },
   { path: "*", Component: NotFoundPage },

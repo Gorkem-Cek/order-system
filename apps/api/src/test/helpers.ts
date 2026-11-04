@@ -6,6 +6,7 @@ import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { LightMyRequestResponse } from "fastify";
+import sharp from "sharp";
 import { buildApp, type AppDeps } from "../app";
 import { loadConfig, type Config } from "../config";
 import { createPrismaClient } from "../db";
@@ -161,3 +162,26 @@ export function sessionCookieHeader(res: LightMyRequestResponse): string {
   if (!cookie) throw new Error("No session cookie in response");
   return `${SESSION_COOKIE}=${cookie.value}`;
 }
+
+/** Builds a multipart/form-data body with one file field, like a browser upload. */
+export function multipart(data: Buffer, filename = "photo.jpg", contentType = "image/jpeg") {
+  const boundary = "----siparis-test-boundary";
+  const body = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${filename}"\r\n` +
+        `Content-Type: ${contentType}\r\n\r\n`,
+    ),
+    data,
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  return {
+    payload: body,
+    headers: { "content-type": `multipart/form-data; boundary=${boundary}` },
+  };
+}
+
+/** A plain JPEG photo of the given size. */
+export const jpeg = (width = 2400, height = 1600) =>
+  sharp({ create: { width, height, channels: 3, background: "#b06030" } })
+    .jpeg()
+    .toBuffer();

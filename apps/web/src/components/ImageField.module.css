@@ -1,0 +1,69 @@
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.preview,
+.placeholder {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.row[data-shape="wide"] .preview,
+.row[data-shape="wide"] .placeholder {
+  width: 240px;
+  max-width: 100%;
+  height: 96px;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--border);
+  background: var(--surface-muted);
+  font-size: 1.75rem;
+}
+
+.actions {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.actions label[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.remove {
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--danger);
+}

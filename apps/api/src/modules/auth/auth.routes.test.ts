@@ -158,5 +158,25 @@ describe.skipIf(!hasDatabase)("auth routes", () => {
       expect(res.statusCode).toBe(401);
       expect(res.json()).toMatchObject({ error: { code: "INVALID_CREDENTIALS" } });
     });
+
+    it("limits guesses of the current password per IP", async () => {
+      const limited = createTestContext({ LOGIN_RATE_LIMIT: 2 });
+      try {
+        const { loginEmail } = await limited.createCafe();
+        const cookie = await limited.login(loginEmail);
+        const attempt = () =>
+          limited.app.inject({
+            method: "POST",
+            url: "/api/auth/password",
+            headers: { cookie },
+            payload: { currentPassword: "guess", newPassword: "a-brand-new-password" },
+          });
+        expect((await attempt()).statusCode).toBe(401);
+        expect((await attempt()).statusCode).toBe(401);
+        expect((await attempt()).json()).toMatchObject({ error: { code: "RATE_LIMITED" } });
+      } finally {
+        await limited.cleanup();
+      }
+    });
   });
 });

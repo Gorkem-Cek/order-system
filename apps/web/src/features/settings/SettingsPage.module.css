@@ -1,0 +1,155 @@
+.page {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.hint {
+  margin-top: -8px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.field input,
+.hex {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.field input[aria-invalid],
+.hex[aria-invalid] {
+  border-color: var(--danger);
+}
+
+.colorField {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.colorField legend {
+  margin-bottom: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.colorRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.colorRow input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.hex {
+  width: 110px;
+  font-family: ui-monospace, monospace;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--brand) 8%, white);
+  border: 1px solid color-mix(in srgb, var(--brand) 25%, white);
+}
+
+.previewName {
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.images {
+  display: grid;
+  gap: 16px;
+}
+
+.error {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.success {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #15803d;
+}
