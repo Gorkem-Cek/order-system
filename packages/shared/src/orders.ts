@@ -42,6 +42,9 @@ export const updateOrderStatusRequestSchema = z.object({
 });
 
 // GET /api/staff/orders/history?from=YYYY-MM-DD&to=YYYY-MM-DD&status=SERVED&page=1
+// Dates are business days (Istanbul), inclusive; newest orders first.
+export const ORDER_HISTORY_PAGE_SIZE = 50;
+
 export const orderHistoryQuerySchema = z
   .object({
     from: z.iso.date().optional(),

@@ -1,5 +1,6 @@
 import type { RouteObject } from "react-router";
 import { LoginPage } from "./features/auth/LoginPage";
+import { OrderHistoryPage } from "./features/history/OrderHistoryPage";
 import { MenuPage } from "./features/menu/MenuPage";
 import { MenuAdminPage } from "./features/menu-admin/MenuAdminPage";
 import { OrdersBoard } from "./features/orders/OrdersBoard";
@@ -21,6 +22,7 @@ export const routes: RouteObject[] = [
     Component: StaffLayout,
     children: [
       { index: true, Component: OrdersBoard },
+      { path: "history", Component: OrderHistoryPage },
       { path: "menu", Component: MenuAdminPage },
       { path: "tables", Component: TablesPage },
       { path: "tables/print", Component: QrPrintPage },

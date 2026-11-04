@@ -133,6 +133,9 @@ function StaffShell({
             <NavLink to="/staff" end className={styles.navLink}>
               {t("staff.nav.orders")}
             </NavLink>
+            <NavLink to="/staff/history" className={styles.navLink}>
+              {t("staff.nav.history")}
+            </NavLink>
             <NavLink to="/staff/menu" className={styles.navLink}>
               {t("staff.nav.menu")}
             </NavLink>
