@@ -1,10 +1,15 @@
 // Creates the super-admin account, or resets its password if it already exists.
 // Usage: SUPERADMIN_EMAIL=... SUPERADMIN_PASSWORD=... npm run admin:create
+// With --if-missing (used on every deploy): creates the account the first time and otherwise
+// does nothing, so a password changed in the app is never overwritten by an old variable.
 import { emailSchema, newPasswordSchema } from "@siparis/shared";
 import { z } from "zod";
 import { createPrismaClient } from "../src/db";
 import { Role } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/password";
+
+const ifMissing = process.argv.includes("--if-missing");
+if (ifMissing && !process.env["SUPERADMIN_EMAIL"]) process.exit(0);
 
 const env = z
   .object({
@@ -20,6 +25,11 @@ try {
   const existing = await prisma.user.findUnique({ where: { email: env.SUPERADMIN_EMAIL } });
   if (existing && existing.role !== Role.SUPER_ADMIN) {
     throw new Error(`${env.SUPERADMIN_EMAIL} is a café login, not a super-admin.`);
+  }
+
+  if (existing && ifMissing) {
+    console.log("Super-admin already exists; nothing to do.");
+    process.exit(0);
   }
 
   const passwordHash = await hashPassword(env.SUPERADMIN_PASSWORD);

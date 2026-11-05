@@ -76,3 +76,59 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Builds the image Railway deploys and runs the browser tests against it.
+  production-image:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: siparis_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/siparis_test
+      E2E_BASE_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t siparis .
+      - name: Migrate and create the super-admin, twice
+        run: |
+          release() {
+            docker run --rm --network host -e DATABASE_URL \
+              -e SUPERADMIN_EMAIL=owner@example.com -e SUPERADMIN_PASSWORD="$1" siparis npm run release
+          }
+          release first-password | grep "Super-admin created"
+          release second-password | grep "already exists"
+      - name: Refuses to start with unsafe settings
+        run: |
+          ! docker run --rm --network host -e DATABASE_URL -e PORT=8081 -e UPLOAD_DIR=/tmp/uploads siparis
+      - name: Start the server
+        run: |
+          docker run -d --name app --network host -e DATABASE_URL -e PORT=8080 \
+            -e PUBLIC_URL="$E2E_BASE_URL" -e UPLOAD_DIR=/tmp/uploads -e TRUST_PROXY_HOPS=0 \
+            -e LOGIN_RATE_LIMIT=1000 -e CHECKOUT_RATE_LIMIT=1000 siparis
+          timeout 60 sh -c 'until curl -sf "$E2E_BASE_URL/api/health"; do sleep 1; done'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - if: failure()
+        run: docker logs app
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-production
+          path: playwright-report/
+          retention-days: 7

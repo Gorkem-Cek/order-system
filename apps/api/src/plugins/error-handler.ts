@@ -2,6 +2,7 @@ import type { ApiError, ApiErrorCode } from "@siparis/shared";
 import type { FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import { AppError } from "../lib/errors";
+import { sendsWebApp, sendWebApp } from "../routes/web";
 
 const codeForStatus: Record<number, ApiErrorCode> = {
   401: "UNAUTHORIZED",
@@ -17,7 +18,7 @@ function body(code: ApiErrorCode, message: string, details?: Record<string, unkn
 }
 
 /** Sends every error in the shared `{ error: { code, message, details? } }` shape. */
-export function registerErrorHandlers(app: FastifyInstance) {
+export function registerErrorHandlers(app: FastifyInstance, options: { serveWebApp: boolean }) {
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof AppError) {
       return reply.code(error.statusCode).send(body(error.code, error.message, error.details));
@@ -45,6 +46,8 @@ export function registerErrorHandlers(app: FastifyInstance) {
   });
 
   app.setNotFoundHandler((request, reply) =>
-    reply.code(404).send(body("NOT_FOUND", `Route ${request.method} ${request.url} not found`)),
+    options.serveWebApp && sendsWebApp(request)
+      ? sendWebApp(reply)
+      : reply.code(404).send(body("NOT_FOUND", `Route ${request.method} ${request.url} not found`)),
   );
 }

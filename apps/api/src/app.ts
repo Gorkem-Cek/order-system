@@ -1,4 +1,5 @@
 import cookie from "@fastify/cookie";
+import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import { MAX_IMAGE_BYTES } from "@siparis/shared";
@@ -43,6 +44,7 @@ import { authPlugin, createSessionCookie } from "./plugins/auth";
 import { registerErrorHandlers } from "./plugins/error-handler";
 import { healthRoutes } from "./routes/health";
 import { uploadsRoutes } from "./routes/uploads";
+import { webRoutes } from "./routes/web";
 
 export type AppDeps = {
   config: Config;
@@ -56,7 +58,11 @@ export function buildApp(
   { config, prisma, payments = createMockPaymentProvider(), now }: AppDeps,
   options: FastifyServerOptions = {},
 ) {
-  const app = Fastify(options);
+  const app = Fastify({
+    ...options,
+    // A function, because Fastify ignores a plain hop count. Hop 0 is the connection itself.
+    trustProxy: (_address: string, hop: number) => hop < config.TRUST_PROXY_HOPS,
+  });
 
   const users = createUsersRepository(prisma);
   const sessions = createSessionsRepository(prisma);
@@ -94,7 +100,25 @@ export function buildApp(
   });
   const sessionCookie = createSessionCookie({ secure: config.NODE_ENV === "production" });
 
-  registerErrorHandlers(app);
+  registerErrorHandlers(app, { serveWebApp: Boolean(config.WEB_DIR) });
+  app.register(helmet, {
+    // No "unsafe-inline" scripts. Inline styles carry the café's colour; data: images are QR codes.
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    // Menu links carry the table's secret token.
+    referrerPolicy: { policy: "no-referrer" },
+  });
   app.register(cookie);
   app.register(multipart, { limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 5 } });
   app.register(rateLimit, {
@@ -130,6 +154,7 @@ export function buildApp(
   app.register(staffWaiterCallRoutes, { prefix: "/api/staff", cafes, waiterCalls });
   app.register(staffMenuRoutes, { prefix: "/api/staff", cafes, staffMenu });
   app.register(tablesRoutes, { prefix: "/api/staff/tables", cafes, tables });
+  if (config.WEB_DIR) app.register(webRoutes, { root: config.WEB_DIR });
 
   return app;
 }
