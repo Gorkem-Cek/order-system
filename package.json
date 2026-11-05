@@ -15,17 +15,19 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p e2e",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "npm run db:migrate -w @siparis/api --",
     "db:deploy": "npm run db:deploy -w @siparis/api",
     "db:seed": "npm run db:seed -w @siparis/api",
     "db:reset": "npm run db:reset -w @siparis/api",
-    "db:studio": "npm run db:studio -w @siparis/api"
+    "db:studio": "npm run db:studio -w @siparis/api",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
     "concurrently": "^10.0.6",
     "eslint": "^10.13.0",
