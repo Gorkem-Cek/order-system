@@ -95,14 +95,14 @@ Per CLAUDE.md, plus these decisions:
 - **API: Fastify** (TypeScript, zod-validated) with route → service → repository layering.
 - **Real-time: Server-Sent Events (SSE)** from the API to staff screens for new orders, status changes and waiter calls. This is simpler than WebSockets and enough for one-way push.
 - **Auth:** staff/super-admin log in with email + password (argon2 hashing) and get an httpOnly session cookie. Guests are identified only by the table token.
-- **Images:** uploaded to S3-compatible object storage (Cloudflare R2), resized on upload, max 5 MB.
+- **Images:** stored on a persistent volume, resized on upload, max 5 MB. Object storage (e.g. Cloudflare R2) can replace it behind the same interface if the app outgrows one server.
 - **QR codes:** generated server-side (`qrcode` package). The print page is a print-optimised HTML sheet.
 - **Web:** React + Vite. Customer pages are mobile-first and staff pages desktop/tablet-first. Each café's branding is applied through CSS variables.
 - **Seed:** a demo café ("Demo Kafe") with tables, categories and an example catalog that uses options.
 
 ## 10. Deployment (recommendation)
 
-**Railway**: one service runs the Fastify API and serves the built web app, alongside a managed PostgreSQL and Cloudflare R2 for images.
+**Railway**: one service runs the Fastify API and serves the built web app, alongside a managed PostgreSQL, with a persistent volume for images.
 
 - SSE needs a long-running server, which rules out serverless hosts like Vercel for the API.
 - It's cheap at the start, deploys from GitHub, and scales up later. Fly.io or a VPS with Docker remain options if needed.

@@ -16,7 +16,6 @@ describe("loadConfig", () => {
       CHECKOUT_RATE_LIMIT: 10,
       UPLOAD_DIR: "uploads",
       PUBLIC_URL: "http://localhost:5173",
-      TRUST_PROXY_HOPS: 0,
     });
   });
 
@@ -37,10 +36,10 @@ describe("loadConfig", () => {
     const base = { DATABASE_URL, NODE_ENV: "production" };
     const production = { ...base, PUBLIC_URL: "https://siparis.app", UPLOAD_DIR: "/data/uploads" };
 
-    it("listens publicly, trusts one proxy and serves the web app", () => {
+    it("listens publicly, reads the visitor's address from the proxy and serves the web app", () => {
       expect(loadConfig(production)).toMatchObject({
         API_HOST: "0.0.0.0",
-        TRUST_PROXY_HOPS: 1,
+        CLIENT_IP_HEADER: "x-real-ip",
         WEB_DIR: "../web/dist",
       });
     });

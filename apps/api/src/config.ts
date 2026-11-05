@@ -18,9 +18,8 @@ const envSchema = z.object({
     .url({ protocol: /^https?$/ })
     .default("http://localhost:5173")
     .transform((url) => url.replace(/\/+$/, "")),
-  // How many proxies in front of the API add to X-Forwarded-For. Only these are trusted, so a
-  // client can't dodge the rate limits by sending the header itself.
-  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+  // The header in which the proxy in front of the API gives the visitor's address.
+  CLIENT_IP_HEADER: z.string().min(1).toLowerCase().optional(),
   // The built web app, served by the API when set (relative to the API's working directory).
   WEB_DIR: z.string().min(1).optional(),
 });
@@ -30,7 +29,11 @@ export type Config = z.infer<typeof envSchema>;
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const production = env["NODE_ENV"] === "production";
   const config = envSchema.parse({
-    ...(production && { API_HOST: "0.0.0.0", TRUST_PROXY_HOPS: "1", WEB_DIR: "../web/dist" }),
+    ...(production && {
+      API_HOST: "0.0.0.0",
+      CLIENT_IP_HEADER: "x-real-ip",
+      WEB_DIR: "../web/dist",
+    }),
     // Provided by Railway.
     ...(env["PORT"] && { API_PORT: env["PORT"] }),
     ...(env["RAILWAY_PUBLIC_DOMAIN"] && { PUBLIC_URL: `https://${env["RAILWAY_PUBLIC_DOMAIN"]}` }),

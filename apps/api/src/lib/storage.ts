@@ -18,8 +18,8 @@ export function newImageKey(folder: string, name: string): string {
 }
 
 /**
- * Where uploaded files live. Local disk for development; an S3-compatible bucket
- * (Cloudflare R2) will implement the same interface for production.
+ * Where uploaded files live: local disk, which in production is a persistent volume. A bucket
+ * (e.g. Cloudflare R2) could implement the same interface if the app outgrows one server.
  */
 export interface FileStorage {
   /** Saves the file and returns its public URL. */

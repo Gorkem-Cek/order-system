@@ -6,6 +6,7 @@ import { MAX_IMAGE_BYTES } from "@siparis/shared";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import type { Config } from "./config";
 import type { PrismaClient } from "./db";
+import { decorateClientIp } from "./lib/client-ip";
 import { AppError } from "./lib/errors";
 import { createEventBus } from "./lib/event-bus";
 import { createLocalStorage, UPLOADS_PATH } from "./lib/storage";
@@ -58,11 +59,8 @@ export function buildApp(
   { config, prisma, payments = createMockPaymentProvider(), now }: AppDeps,
   options: FastifyServerOptions = {},
 ) {
-  const app = Fastify({
-    ...options,
-    // A function, because Fastify ignores a plain hop count. Hop 0 is the connection itself.
-    trustProxy: (_address: string, hop: number) => hop < config.TRUST_PROXY_HOPS,
-  });
+  const app = Fastify(options);
+  decorateClientIp(app, config.CLIENT_IP_HEADER);
 
   const users = createUsersRepository(prisma);
   const sessions = createSessionsRepository(prisma);
@@ -123,6 +121,7 @@ export function buildApp(
   app.register(multipart, { limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 5 } });
   app.register(rateLimit, {
     global: false,
+    keyGenerator: (request) => request.clientIp,
     errorResponseBuilder: (_request, context) =>
       new AppError(429, "RATE_LIMITED", `Too many attempts, retry in ${context.after}`),
   });

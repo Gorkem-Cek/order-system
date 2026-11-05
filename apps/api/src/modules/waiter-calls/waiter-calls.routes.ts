@@ -20,7 +20,7 @@ export const guestWaiterCallRoutes: FastifyPluginAsync<{
         rateLimit: {
           max: rateLimit,
           timeWindow: "1 minute",
-          keyGenerator: (request) => `${request.ip}:${request.url}`,
+          keyGenerator: (request) => `${request.clientIp}:${request.url}`,
         },
       },
     },

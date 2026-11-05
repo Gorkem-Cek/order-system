@@ -77,23 +77,25 @@ describe.skipIf(!hasDatabase)("serving the web app", () => {
 });
 
 describe.skipIf(!hasDatabase)("rate limits behind a proxy", () => {
-  const ctx = createTestContext({ LOGIN_RATE_LIMIT: 1, TRUST_PROXY_HOPS: 1 });
+  const ctx = createTestContext({ LOGIN_RATE_LIMIT: 1, CLIENT_IP_HEADER: "x-real-ip" });
   afterAll(() => ctx.cleanup());
 
-  const attempt = (forwardedFor: string) =>
+  const attempt = (headers: Record<string, string>) =>
     ctx.app.inject({
       method: "POST",
       url: "/api/auth/login",
-      headers: { "x-forwarded-for": forwardedFor },
+      headers,
       payload: { email: "nobody@example.com", password: "x" },
     });
 
-  it("limits each visitor separately, and a fake header can't get around it", async () => {
-    expect((await attempt("203.0.113.1")).statusCode).toBe(401);
-    expect((await attempt("203.0.113.1")).statusCode).toBe(429);
+  it("limits each visitor separately, and other headers can't get around it", async () => {
+    const visitor = { "x-real-ip": "203.0.113.1" };
+    expect((await attempt(visitor)).statusCode).toBe(401);
+    expect((await attempt(visitor)).statusCode).toBe(429);
     // Someone else in the world isn't affected…
-    expect((await attempt("203.0.113.2")).statusCode).toBe(401);
-    // …but a client can't pretend to be someone else: the proxy appends the real address last.
-    expect((await attempt("198.51.100.9, 203.0.113.1")).statusCode).toBe(429);
+    expect((await attempt({ "x-real-ip": "203.0.113.2" })).statusCode).toBe(401);
+    // …and adding a made-up forwarding header doesn't make the visitor someone else.
+    const faked = { ...visitor, "x-forwarded-for": "198.51.100.9" };
+    expect((await attempt(faked)).statusCode).toBe(429);
   });
 });

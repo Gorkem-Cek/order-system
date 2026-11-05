@@ -25,7 +25,7 @@ export const menuRoutes: FastifyPluginAsync<{
           max: checkoutRateLimit,
           timeWindow: "1 minute",
           // Guests of one café often share an IP (café Wi-Fi), so limit per table too.
-          keyGenerator: (request) => `${request.ip}:${request.url}`,
+          keyGenerator: (request) => `${request.clientIp}:${request.url}`,
         },
       },
     },
