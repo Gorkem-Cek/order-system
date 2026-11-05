@@ -17,7 +17,10 @@ test("a sold-out product can't be ordered; the table's QR link opens the menu", 
   await expect(guest.getByRole("button", { name: /^Çay,/ })).toBeEnabled();
 
   await staff.getByRole("link", { name: "Menü", exact: true }).click();
-  await staff.getByRole("switch", { name: "Satışta: Çay" }).uncheck();
+  // click(), not uncheck(): the switch follows the saved menu, so it changes a moment later.
+  const onSale = staff.getByRole("switch", { name: "Satışta: Çay" });
+  await onSale.click();
+  await expect(onSale).not.toBeChecked();
   await expect(staff.getByText("Tükendi")).toBeVisible();
 
   await guest.reload();
