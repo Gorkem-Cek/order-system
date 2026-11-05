@@ -6,9 +6,11 @@ if (existsSync(".env")) process.loadEnvFile(".env");
 
 // Its own ports, so the tests can run while `npm run dev` is open. Every test creates its own
 // café in the DATABASE_URL database and deletes it afterwards, so existing data stays untouched.
+// E2E_BASE_URL tests an already running server instead (CI: the production image).
 const API_PORT = "3100";
 const WEB_PORT = "5199";
-const baseURL = `http://localhost:${WEB_PORT}`;
+const external = process.env.E2E_BASE_URL;
+const baseURL = external ?? `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({
   testDir: "e2e",
@@ -23,17 +25,19 @@ export default defineConfig({
     timezoneId: "Europe/Istanbul",
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: "npm run dev",
-    url: `${baseURL}/api/health`,
-    reuseExistingServer: false,
-    env: {
-      API_PORT,
-      WEB_PORT,
-      PUBLIC_URL: baseURL,
-      LOG_LEVEL: "warn",
-      LOGIN_RATE_LIMIT: "1000",
-      CHECKOUT_RATE_LIMIT: "1000",
+  ...(!external && {
+    webServer: {
+      command: "npm run dev",
+      url: `${baseURL}/api/health`,
+      reuseExistingServer: false,
+      env: {
+        API_PORT,
+        WEB_PORT,
+        PUBLIC_URL: baseURL,
+        LOG_LEVEL: "warn",
+        LOGIN_RATE_LIMIT: "1000",
+        CHECKOUT_RATE_LIMIT: "1000",
+      },
     },
-  },
+  }),
 });

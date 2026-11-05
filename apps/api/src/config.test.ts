@@ -16,6 +16,7 @@ describe("loadConfig", () => {
       CHECKOUT_RATE_LIMIT: 10,
       UPLOAD_DIR: "uploads",
       PUBLIC_URL: "http://localhost:5173",
+      TRUST_PROXY_HOPS: 0,
     });
   });
 
@@ -30,6 +31,42 @@ describe("loadConfig", () => {
     );
     expect(() => loadConfig({ DATABASE_URL, PUBLIC_URL: "siparis.app" })).toThrow();
     expect(() => loadConfig({ DATABASE_URL, PUBLIC_URL: "javascript:alert(1)" })).toThrow();
+  });
+
+  describe("in production", () => {
+    const base = { DATABASE_URL, NODE_ENV: "production" };
+    const production = { ...base, PUBLIC_URL: "https://siparis.app", UPLOAD_DIR: "/data/uploads" };
+
+    it("listens publicly, trusts one proxy and serves the web app", () => {
+      expect(loadConfig(production)).toMatchObject({
+        API_HOST: "0.0.0.0",
+        TRUST_PROXY_HOPS: 1,
+        WEB_DIR: "../web/dist",
+      });
+    });
+
+    it("uses the port and address Railway provides, unless they're set explicitly", () => {
+      const railway = {
+        ...base,
+        UPLOAD_DIR: "/data/uploads",
+        PORT: "8080",
+        RAILWAY_PUBLIC_DOMAIN: "siparis.up.railway.app",
+      };
+      expect(loadConfig(railway)).toMatchObject({
+        API_PORT: 8080,
+        PUBLIC_URL: "https://siparis.up.railway.app",
+      });
+      expect(loadConfig({ ...railway, PUBLIC_URL: "https://siparis.app" }).PUBLIC_URL).toBe(
+        "https://siparis.app",
+      );
+    });
+
+    it("refuses settings that would print useless QR codes or lose photos", () => {
+      expect(() => loadConfig({ ...base, UPLOAD_DIR: "/data" })).toThrow(/PUBLIC_URL/);
+      expect(() => loadConfig({ ...base, PUBLIC_URL: "https://siparis.app" })).toThrow(
+        /UPLOAD_DIR/,
+      );
+    });
   });
 
   it("requires DATABASE_URL", () => {

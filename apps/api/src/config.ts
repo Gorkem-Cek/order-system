@@ -18,10 +18,32 @@ const envSchema = z.object({
     .url({ protocol: /^https?$/ })
     .default("http://localhost:5173")
     .transform((url) => url.replace(/\/+$/, "")),
+  // How many proxies in front of the API add to X-Forwarded-For. Only these are trusted, so a
+  // client can't dodge the rate limits by sending the header itself.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+  // The built web app, served by the API when set (relative to the API's working directory).
+  WEB_DIR: z.string().min(1).optional(),
 });
 
 export type Config = z.infer<typeof envSchema>;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  return envSchema.parse(env);
+  const production = env["NODE_ENV"] === "production";
+  const config = envSchema.parse({
+    ...(production && { API_HOST: "0.0.0.0", TRUST_PROXY_HOPS: "1", WEB_DIR: "../web/dist" }),
+    // Provided by Railway.
+    ...(env["PORT"] && { API_PORT: env["PORT"] }),
+    ...(env["RAILWAY_PUBLIC_DOMAIN"] && { PUBLIC_URL: `https://${env["RAILWAY_PUBLIC_DOMAIN"]}` }),
+    ...env,
+  });
+
+  if (production) {
+    if (new URL(config.PUBLIC_URL).hostname === "localhost") {
+      throw new Error("Set PUBLIC_URL: printed QR codes would otherwise link to localhost.");
+    }
+    if (!env["UPLOAD_DIR"]) {
+      throw new Error("Set UPLOAD_DIR to persistent storage: uploaded images would be lost.");
+    }
+  }
+  return config;
 }

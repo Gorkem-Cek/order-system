@@ -50,16 +50,20 @@ npm run dev            # web on http://localhost:5173, API on http://localhost:3
 
 ## Scripts
 
-| Command                | Description                         |
-| ---------------------- | ----------------------------------- |
-| `npm run dev`          | Start API and web in dev mode       |
-| `npm run build`        | Build web and API                   |
-| `npm test`             | Run unit/integration tests          |
-| `npm run lint`         | Lint all workspaces                 |
-| `npm run typecheck`    | Type-check all workspaces           |
-| `npm run format`       | Format everything with Prettier     |
-| `npm run format:check` | Check formatting (runs in CI)       |
-| `npm run test:e2e`     | Playwright end-to-end tests (later) |
+| Command                | Description                     |
+| ---------------------- | ------------------------------- |
+| `npm run dev`          | Start API and web in dev mode   |
+| `npm run build`        | Build web and API               |
+| `npm test`             | Run unit/integration tests      |
+| `npm run lint`         | Lint all workspaces             |
+| `npm run typecheck`    | Type-check all workspaces       |
+| `npm run format`       | Format everything with Prettier |
+| `npm run format:check` | Check formatting (runs in CI)   |
+| `npm run test:e2e`     | Playwright end-to-end tests     |
+
+## Deployment
+
+See [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## License
 
