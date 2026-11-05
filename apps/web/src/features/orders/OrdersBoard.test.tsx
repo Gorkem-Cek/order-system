@@ -278,7 +278,9 @@ describe("super-admin", () => {
     const user = userEvent.setup();
     renderRoute("/staff");
 
-    await user.click(await screen.findByRole("button", { name: /Demo Kafe/ }));
+    // No café chosen yet: the admin page opens, and picking a café opens its board.
+    expect(await screen.findByRole("heading", { name: "Kafeler" })).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Paneli aç" }));
     expect(await screen.findByRole("heading", { name: "Siparişler" })).toBeInTheDocument();
 
     const staffCalls = requests.filter((r) => r.url.startsWith("/api/staff/"));
@@ -287,9 +289,7 @@ describe("super-admin", () => {
     expect(FakeEventSource.latest().url).toBe(`/api/staff/events?cafeId=${cafe.id}`);
 
     await user.click(screen.getByRole("button", { name: "Kafe değiştir" }));
-    expect(
-      await screen.findByRole("heading", { name: "Hangi kafeyi açmak istiyorsunuz?" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Kafeler" })).toBeInTheDocument();
   });
 });
 
