@@ -114,7 +114,7 @@ jobs:
       - name: Start the server
         run: |
           docker run -d --name app --network host -e DATABASE_URL -e PORT=8080 \
-            -e PUBLIC_URL="$E2E_BASE_URL" -e UPLOAD_DIR=/tmp/uploads -e TRUST_PROXY_HOPS=0 \
+            -e PUBLIC_URL="$E2E_BASE_URL" -e UPLOAD_DIR=/tmp/uploads \
             -e LOGIN_RATE_LIMIT=1000 -e CHECKOUT_RATE_LIMIT=1000 siparis
           timeout 60 sh -c 'until curl -sf "$E2E_BASE_URL/api/health"; do sleep 1; done'
       - uses: actions/setup-node@v4
