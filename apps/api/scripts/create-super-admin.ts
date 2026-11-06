@@ -9,7 +9,8 @@ import { Role } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/password";
 
 const ifMissing = process.argv.includes("--if-missing");
-if (ifMissing && !process.env["SUPERADMIN_EMAIL"]) process.exit(0);
+if (ifMissing && !(process.env["SUPERADMIN_EMAIL"] && process.env["SUPERADMIN_PASSWORD"]))
+  process.exit(0);
 
 const env = z
   .object({

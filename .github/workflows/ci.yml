@@ -108,6 +108,8 @@ jobs:
           }
           release first-password | grep "Super-admin created"
           release second-password | grep "already exists"
+          # Deleting only the password variable afterwards must not break later deploys.
+          docker run --rm --network host -e DATABASE_URL -e SUPERADMIN_EMAIL=owner@example.com siparis npm run release
       - name: Refuses to start with unsafe settings
         run: |
           ! docker run --rm --network host -e DATABASE_URL -e PORT=8081 -e UPLOAD_DIR=/tmp/uploads siparis
