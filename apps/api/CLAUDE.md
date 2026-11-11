@@ -1,0 +1,8 @@
+# API conventions
+
+- Small, focused modules; route → service → repository layering in the API, grouped per feature in `apps/api/src/modules/<feature>/` (`*.routes.ts`, `*.service.ts`, `*.repository.ts`). Services receive repositories via factory functions; `buildApp({ config, prisma })` wires them.
+- Auth: DB-backed sessions in an httpOnly cookie. Guard routes with `requireUser`, `requireSuperAdmin` or `requireCafe` (staff routes; super-admin picks the café via the `X-Cafe-Id` header) from `apps/api/src/plugins/auth.ts`. Throw `AppError` (`apps/api/src/lib/errors.ts`) for expected errors.
+- API integration tests use `createTestContext()` from `apps/api/src/test/helpers.ts` against the real database.
+- Images: `processImage()` (`apps/api/src/lib/images.ts`) validates by content, resizes to ≤1200px and stores WebP without metadata; files go through the `FileStorage` interface (`apps/api/src/lib/storage.ts`) — local disk served at `/uploads`, a persistent volume in production.
+- Tables: the QR code links to `<PUBLIC_URL>/m/<qrToken>` (`PUBLIC_URL` in `.env`); the API renders it as SVG (`apps/api/src/lib/qr.ts`). Regenerating a table's token invalidates the old printed code. Deleting a table keeps its orders (they snapshot the table name) and resolves its open waiter call.
+- Rate limits key on `request.clientIp` (`apps/api/src/lib/client-ip.ts`), never `request.ip`: behind Railway's proxy `request.ip` is the proxy, so every visitor would share one limit. In production it comes from `X-Real-IP` (`CLIENT_IP_HEADER`).
