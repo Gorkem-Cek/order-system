@@ -16,7 +16,7 @@ beforeEach(() => {
   checkoutBodies = [];
   checkoutHandler = () => ({
     status: 201,
-    body: { orderId: ORDER_ID, orderNumber: 12, totalKurus: 8000 },
+    body: { kind: "paid", orderId: ORDER_ID, orderNumber: 12, totalKurus: 8000 },
   });
   mockFetch((url, init) => {
     if (url === `/api/menu/${TOKEN}`) return { status: 200, body: menuFixture };

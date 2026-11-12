@@ -1,13 +1,13 @@
 import type { SelectedOption } from "@siparis/shared";
 import type { PrismaClient } from "../../db";
-import type { OrderStatus } from "../../generated/prisma/client";
+import type { OrderStatus, Prisma } from "../../generated/prisma/client";
 
 const bySortOrder = [{ sortOrder: "asc" as const }, { id: "asc" as const }];
 const withItems = { items: { orderBy: { id: "asc" as const } } };
 
 export type NewOrder = {
   cafeId: string;
-  tableId: string;
+  tableId: string | null;
   tableName: string;
   orderDate: Date;
   note: string | null;
@@ -23,6 +23,32 @@ export type NewOrder = {
   }[];
 };
 
+/**
+ * Creates the order with the next number of its café's day, inside the caller's transaction.
+ * A per-café advisory lock serialises concurrent checkouts so two orders never share a number.
+ */
+export async function insertOrderWithNextNumber(tx: Prisma.TransactionClient, order: NewOrder) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${order.cafeId}))`;
+  const { _max } = await tx.order.aggregate({
+    where: { cafeId: order.cafeId, orderDate: order.orderDate },
+    _max: { orderNumber: true },
+  });
+  const { items, ...data } = order;
+  return tx.order.create({
+    data: {
+      ...data,
+      orderNumber: (_max.orderNumber ?? 0) + 1,
+      items: {
+        create: items.map((item) => ({
+          ...item,
+          selectedOptions: item.selectedOptions as Prisma.InputJsonValue,
+        })),
+      },
+    },
+    include: withItems,
+  });
+}
+
 export function createOrdersRepository(prisma: PrismaClient) {
   return {
     /** The café's non-deleted products with these ids, with options for pricing. */
@@ -35,23 +61,9 @@ export function createOrdersRepository(prisma: PrismaClient) {
       });
     },
 
-    /**
-     * Creates the order with the next number of its café's day. A per-café advisory lock
-     * serialises concurrent checkouts so two orders never get the same number.
-     */
+    /** See insertOrderWithNextNumber. */
     createWithNextNumber(order: NewOrder) {
-      return prisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${order.cafeId}))`;
-        const { _max } = await tx.order.aggregate({
-          where: { cafeId: order.cafeId, orderDate: order.orderDate },
-          _max: { orderNumber: true },
-        });
-        const { items, ...data } = order;
-        return tx.order.create({
-          data: { ...data, orderNumber: (_max.orderNumber ?? 0) + 1, items: { create: items } },
-          include: withItems,
-        });
-      });
+      return prisma.$transaction((tx) => insertOrderWithNextNumber(tx, order));
     },
 
     findById(cafeId: string, id: string) {

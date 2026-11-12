@@ -1,4 +1,4 @@
-import { formatKurus, mockPaymentSchema, type CheckoutResponse } from "@siparis/shared";
+import { formatKurus, mockPaymentSchema, type PlacedOrder } from "@siparis/shared";
 import { useId, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Sheet } from "../../components/Sheet";
@@ -24,7 +24,7 @@ type CheckoutSheetProps = {
   qrToken: string;
   priced: PricedCart;
   onBack: () => void;
-  onSuccess: (order: CheckoutResponse) => void;
+  onSuccess: (order: PlacedOrder) => void;
   /** The server says the cart no longer matches the menu. */
   onCartChanged: () => void;
 };
@@ -63,7 +63,11 @@ export function CheckoutSheet({
         payment: { method: "mock", ...card },
       },
       {
-        onSuccess,
+        onSuccess: (result) => {
+          // iyzico payments continue on iyzico's page and come back to the menu.
+          if (result.kind === "redirect") window.location.assign(result.paymentPageUrl);
+          else onSuccess(result);
+        },
         onError: (error) => {
           if (error instanceof ApiRequestError && error.code === "INVALID_CART") onCartChanged();
         },
