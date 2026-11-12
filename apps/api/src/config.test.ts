@@ -16,6 +16,7 @@ describe("loadConfig", () => {
       CHECKOUT_RATE_LIMIT: 10,
       UPLOAD_DIR: "uploads",
       PUBLIC_URL: "http://localhost:5173",
+      ALLOW_MOCK_PAYMENTS: true,
     });
   });
 
@@ -40,6 +41,7 @@ describe("loadConfig", () => {
       expect(loadConfig(production)).toMatchObject({
         API_HOST: "0.0.0.0",
         CLIENT_IP_HEADER: "x-real-ip",
+        ALLOW_MOCK_PAYMENTS: false,
         WEB_DIR: "../web/dist",
       });
     });

@@ -26,6 +26,9 @@ const envSchema = z.object({
     .string()
     .refine((value) => Buffer.from(value, "base64").length === 32, "Must be 32 bytes, base64")
     .optional(),
+  // The fake card payment: on in development and tests, off in production, where a café
+  // can only take orders once its iyzico account is connected.
+  ALLOW_MOCK_PAYMENTS: z.stringbool().default(true),
   // The built web app, served by the API when set (relative to the API's working directory).
   WEB_DIR: z.string().min(1).optional(),
 });
@@ -38,6 +41,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     ...(production && {
       API_HOST: "0.0.0.0",
       CLIENT_IP_HEADER: "x-real-ip",
+      ALLOW_MOCK_PAYMENTS: "false",
       WEB_DIR: "../web/dist",
     }),
     // Provided by Railway.
