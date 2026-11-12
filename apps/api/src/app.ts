@@ -9,6 +9,7 @@ import type { PrismaClient } from "./db";
 import { decorateClientIp } from "./lib/client-ip";
 import { AppError } from "./lib/errors";
 import { createEventBus } from "./lib/event-bus";
+import { createSecretBox, parseSecretKey } from "./lib/secret-box";
 import { createLocalStorage, UPLOADS_PATH } from "./lib/storage";
 import { createAuthService } from "./modules/auth/auth.service";
 import { authRoutes } from "./modules/auth/auth.routes";
@@ -16,6 +17,7 @@ import { createSessionsRepository } from "./modules/auth/sessions.repository";
 import { createUsersRepository } from "./modules/auth/users.repository";
 import { adminCafesRoutes } from "./modules/cafes/admin-cafes.routes";
 import { createCafesRepository } from "./modules/cafes/cafes.repository";
+import { createCafePaymentsService } from "./modules/cafes/cafe-payments.service";
 import { createCafesService } from "./modules/cafes/cafes.service";
 import { staffCafeRoutes } from "./modules/cafes/staff-cafe.routes";
 import { staffEventsRoutes } from "./modules/events/staff-events.routes";
@@ -25,6 +27,7 @@ import { createMenuService } from "./modules/menu/menu.service";
 import { createOrdersRepository } from "./modules/orders/orders.repository";
 import { createOrdersService } from "./modules/orders/orders.service";
 import { staffOrdersRoutes } from "./modules/orders/staff-orders.routes";
+import { createIyzicoClient } from "./modules/payments/iyzico";
 import {
   createMockPaymentProvider,
   type PaymentProvider,
@@ -53,10 +56,12 @@ export type AppDeps = {
   /** Defaults to the mock provider (MVP). */
   payments?: PaymentProvider;
   now?: () => Date;
+  /** How the API reaches iyzico; tests pass a fake. */
+  iyzicoFetch?: typeof fetch;
 };
 
 export function buildApp(
-  { config, prisma, payments = createMockPaymentProvider(), now }: AppDeps,
+  { config, prisma, payments = createMockPaymentProvider(), now, iyzicoFetch }: AppDeps,
   options: FastifyServerOptions = {},
 ) {
   const app = Fastify(options);
@@ -67,6 +72,15 @@ export function buildApp(
   const cafes = createCafesRepository(prisma);
   const auth = createAuthService({ users, sessions, sessionTtlDays: config.SESSION_TTL_DAYS });
   const storage = createLocalStorage(config.UPLOAD_DIR);
+  const secretBox = config.PAYMENT_SECRET_KEY
+    ? createSecretBox(parseSecretKey(config.PAYMENT_SECRET_KEY))
+    : null;
+  const cafePayments = createCafePaymentsService({
+    cafes,
+    secretBox,
+    iyzico: (credentials) =>
+      createIyzicoClient(credentials, { ...(iyzicoFetch && { fetch: iyzicoFetch }) }),
+  });
   const cafesService = createCafesService({ cafes, users, sessions, storage });
   const menuRepository = createMenuRepository(prisma);
   const menuService = createMenuService({ menu: menuRepository });
@@ -135,7 +149,7 @@ export function buildApp(
     cookie: sessionCookie,
     loginRateLimit: config.LOGIN_RATE_LIMIT,
   });
-  app.register(adminCafesRoutes, { prefix: "/api/admin", cafesService });
+  app.register(adminCafesRoutes, { prefix: "/api/admin", cafesService, cafePayments });
   app.register(staffCafeRoutes, { prefix: "/api/staff", cafes, cafesService });
   app.register(staffOrdersRoutes, { prefix: "/api/staff", cafes, ordersService });
   app.register(staffEventsRoutes, { prefix: "/api/staff", cafes, events });

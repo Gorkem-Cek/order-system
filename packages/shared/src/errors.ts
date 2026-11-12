@@ -18,6 +18,8 @@ export const API_ERROR_CODES = [
   "WAITER_CALL_COOLDOWN",
   "UNSUPPORTED_IMAGE",
   "FILE_TOO_LARGE",
+  "PAYMENT_KEYS_REJECTED",
+  "PAYMENT_PROVIDER_UNAVAILABLE",
   "INTERNAL_ERROR",
 ] as const;
 export const apiErrorCodeSchema = z.enum(API_ERROR_CODES);

@@ -9,12 +9,14 @@ import { useLogout, useSession } from "../auth/useSession";
 import { setActingCafe } from "../staff/acting-cafe";
 import styles from "./AdminCafesPage.module.css";
 import { CreateCafeSheet } from "./CreateCafeSheet";
+import { PaymentSettingsSheet } from "./PaymentSettingsSheet";
 import { ResetPasswordSheet } from "./ResetPasswordSheet";
 import { useAdminCafeActions, useAdminCafes } from "./useAdminCafes";
 
 type Dialog =
   | { kind: "create" }
   | { kind: "password"; cafe: AdminCafe }
+  | { kind: "payment"; cafe: AdminCafe }
   | { kind: "deactivate"; cafe: AdminCafe }
   | null;
 
@@ -122,10 +124,25 @@ function CafesList() {
                   {cafe.slug} · {cafe.loginEmail ?? t("admin.noLogin")} ·{" "}
                   {t("admin.created", { date: created(cafe.createdAt) })}
                 </span>
+                <span className={styles.paymentBadge} data-mode={cafe.paymentMode ?? "NONE"}>
+                  {cafe.paymentMode
+                    ? t("admin.payment.badge", {
+                        mode: t(`admin.payment.modes.${cafe.paymentMode}`),
+                      })
+                    : t("admin.payment.badgeNone")}
+                </span>
               </div>
               <div className={styles.tools}>
                 <button type="button" className="btn btn-primary" onClick={() => open(cafe)}>
                   {t("admin.openPanel")}
+                </button>
+                <button
+                  type="button"
+                  className={styles.tool}
+                  onClick={() => setDialog({ kind: "payment", cafe })}
+                  aria-label={`${t("admin.payment.open")}: ${cafe.name}`}
+                >
+                  {t("admin.payment.open")}
                 </button>
                 <button
                   type="button"
@@ -164,6 +181,9 @@ function CafesList() {
 
       {dialog?.kind === "create" && (
         <CreateCafeSheet create={actions.create} onClose={() => setDialog(null)} />
+      )}
+      {dialog?.kind === "payment" && (
+        <PaymentSettingsSheet cafe={dialog.cafe} onClose={() => setDialog(null)} />
       )}
       {dialog?.kind === "password" && (
         <ResetPasswordSheet

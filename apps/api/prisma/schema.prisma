@@ -28,6 +28,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+// Which iyzico environment a café's keys belong to.
+enum IyzicoMode {
+  SANDBOX
+  LIVE
+}
+
 enum WaiterCallStatus {
   OPEN
   RESOLVED
@@ -43,6 +49,15 @@ model Cafe {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  // Sent to iyzico as the buyer and billing address (guests aren't asked for theirs).
+  address         String?
+  city            String?
+  // The café's own iyzico merchant account; set by the super-admin only.
+  iyzicoMode      IyzicoMode?
+  iyzicoApiKey    String?
+  // Encrypted with PAYMENT_SECRET_KEY (lib/secret-box.ts), never stored in plain text.
+  iyzicoSecretKey String?
 
   users       User[]
   tables      Table[]
@@ -210,9 +225,9 @@ model OrderItem {
 }
 
 model WaiterCall {
-  id         String           @id @default(cuid())
-  cafeId     String
-  tableId    String
+  id           String           @id @default(cuid())
+  cafeId       String
+  tableId      String
   status       WaiterCallStatus @default(OPEN)
   createdAt    DateTime         @default(now())
   // A table has at most one open call; pressing again (after the cooldown) re-alerts staff

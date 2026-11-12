@@ -20,6 +20,12 @@ const envSchema = z.object({
     .transform((url) => url.replace(/\/+$/, "")),
   // The header in which the proxy in front of the API gives the visitor's address.
   CLIENT_IP_HEADER: z.string().min(1).toLowerCase().optional(),
+  // Encrypts cafés' iyzico secret keys in the database: 32 random bytes, base64
+  // (`openssl rand -base64 32`). Losing it means re-entering every café's keys.
+  PAYMENT_SECRET_KEY: z
+    .string()
+    .refine((value) => Buffer.from(value, "base64").length === 32, "Must be 32 bytes, base64")
+    .optional(),
   // The built web app, served by the API when set (relative to the API's working directory).
   WEB_DIR: z.string().min(1).optional(),
 });

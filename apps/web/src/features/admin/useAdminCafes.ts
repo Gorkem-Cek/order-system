@@ -1,6 +1,8 @@
 import {
   adminCafeSchema,
   adminCafesResponseSchema,
+  cafePaymentSettingsSchema,
+  type UpdateCafePaymentRequest,
   type CreateCafeRequest,
   type UpdateCafeRequest,
 } from "@siparis/shared";
@@ -45,3 +47,32 @@ export function useAdminCafeActions() {
 }
 
 export type AdminCafeActions = ReturnType<typeof useAdminCafeActions>;
+
+/** One café's iyzico account (super-admin only). */
+export function usePaymentSettings(cafeId: string) {
+  const queryClient = useQueryClient();
+  const key = ["admin", "cafes", cafeId, "payment"] as const;
+  const onSuccess = () => {
+    void queryClient.invalidateQueries({ queryKey: key });
+    void queryClient.invalidateQueries({ queryKey: ADMIN_CAFES_KEY, exact: true });
+  };
+  return {
+    settings: useQuery({
+      queryKey: key,
+      queryFn: () => apiFetch(`/admin/cafes/${cafeId}/payment`, cafePaymentSettingsSchema),
+    }),
+    save: useMutation({
+      mutationFn: (body: UpdateCafePaymentRequest) =>
+        apiFetch(`/admin/cafes/${cafeId}/payment`, cafePaymentSettingsSchema, {
+          method: "PUT",
+          body: JSON.stringify(body),
+        }),
+      onSuccess,
+    }),
+    remove: useMutation({
+      mutationFn: () =>
+        apiFetch(`/admin/cafes/${cafeId}/payment`, z.undefined(), { method: "DELETE" }),
+      onSuccess,
+    }),
+  };
+}

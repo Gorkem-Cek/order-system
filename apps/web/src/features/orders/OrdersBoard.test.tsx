@@ -108,6 +108,7 @@ beforeEach(() => {
               isActive: true,
               createdAt: new Date().toISOString(),
               loginEmail: staffUser.email,
+              paymentMode: null,
             },
           ],
         },

@@ -16,6 +16,14 @@ let session: SessionUser | null;
 let cafes: AdminCafe[];
 let calls: { method: string; url: string; body?: Record<string, unknown> }[];
 let counter: number;
+type Payment = {
+  mode: "SANDBOX" | "LIVE" | null;
+  apiKeyEnding: string | null;
+  address: string | null;
+  city: string | null;
+};
+let payment: Payment;
+let rejectKeys: boolean;
 
 const makeCafe = (name: string, slug: string, isActive = true): AdminCafe => ({
   id: `cmcaf${String(++counter).padStart(20, "0")}`,
@@ -24,6 +32,7 @@ const makeCafe = (name: string, slug: string, isActive = true): AdminCafe => ({
   isActive,
   createdAt: "2026-10-28T10:00:00.000Z",
   loginEmail: `${slug}@example.com`,
+  paymentMode: null,
 });
 
 beforeEach(() => {
@@ -33,6 +42,8 @@ beforeEach(() => {
   session = admin;
   cafes = [makeCafe("Demo Kafe", "demo-kafe"), makeCafe("Eski Kafe", "eski-kafe", false)];
   calls = [];
+  payment = { mode: null, apiKeyEnding: null, address: null, city: null };
+  rejectKeys = false;
 
   mockFetch((url, init) => {
     const method = init?.method ?? "GET";
@@ -63,6 +74,21 @@ beforeEach(() => {
       return { status: 200, body: cafe };
     }
     if (/^\/api\/admin\/cafes\/\w+\/password$/.test(url)) return { status: 204 };
+    if (/^\/api\/admin\/cafes\/\w+\/payment$/.test(url) && method === "GET") {
+      return { status: 200, body: payment };
+    }
+    if (/^\/api\/admin\/cafes\/\w+\/payment$/.test(url) && method === "PUT") {
+      if (rejectKeys) {
+        return { status: 400, body: { error: { code: "PAYMENT_KEYS_REJECTED", message: "x" } } };
+      }
+      payment = {
+        mode: body.mode,
+        apiKeyEnding: body.apiKey ? body.apiKey.slice(-4) : payment.apiKeyEnding,
+        address: body.address,
+        city: body.city,
+      };
+      return { status: 200, body: payment };
+    }
     return { status: 404, body: { error: { code: "NOT_FOUND", message: "x" } } };
   });
 });
@@ -187,5 +213,84 @@ describe("AdminCafesPage", () => {
     renderRoute("/admin");
     await waitFor(() => expect(screen.queryByRole("heading", { name: "Kafeler" })).toBeNull());
     expect(calls).toEqual([]);
+  });
+
+  describe("payment settings", () => {
+    const sheet = () => screen.getByRole("dialog");
+    const fill = async (u: ReturnType<typeof userEvent.setup>, label: string, value: string) => {
+      const input = within(sheet()).getByLabelText(label);
+      await u.clear(input);
+      if (value) await u.type(input, value);
+    };
+    const openPayment = async () => {
+      const u = await openAdmin();
+      await u.click(within(row("Demo Kafe")).getByRole("button", { name: /Ödeme ayarları/ }));
+      await within(sheet()).findByLabelText("Kafe adresi");
+      return u;
+    };
+
+    it("shows which cafés can take payments", async () => {
+      cafes[1] = { ...(cafes[1] as AdminCafe), paymentMode: "SANDBOX" };
+      await openAdmin();
+      expect(row("Demo Kafe")).toHaveTextContent("iyzico bağlı değil");
+      expect(row("Eski Kafe")).toHaveTextContent("iyzico: Test (sandbox)");
+    });
+
+    it("connects a café's iyzico test account", async () => {
+      const u = await openPayment();
+      expect(within(sheet()).getByText(/henüz bağlı değil/)).toBeInTheDocument();
+      expect(within(sheet()).getByRole("radio", { name: /Test \(sandbox\)/ })).toBeChecked();
+
+      await fill(u, "Kafe adresi", "Moda Cad. No 1");
+      await fill(u, "Şehir", "İstanbul");
+      await fill(u, "iyzico API anahtarı", "sandbox-abcdef1234");
+      await fill(u, "iyzico güvenlik anahtarı (secret key)", "sandbox-secret-5678");
+      await u.click(within(sheet()).getByRole("button", { name: "Kaydet" }));
+
+      expect(await within(sheet()).findByRole("status")).toHaveTextContent("doğrulandı");
+      expect(calls).toEqual([
+        {
+          method: "PUT",
+          url: `/api/admin/cafes/${cafes[0]?.id}/payment`,
+          body: {
+            mode: "SANDBOX",
+            address: "Moda Cad. No 1",
+            city: "İstanbul",
+            apiKey: "sandbox-abcdef1234",
+            secretKey: "sandbox-secret-5678",
+          },
+        },
+      ]);
+      // The typed keys are cleared once saved; only the API key's ending is shown.
+      expect(within(sheet()).getByLabelText("iyzico güvenlik anahtarı (secret key)")).toHaveValue(
+        "",
+      );
+      expect(await within(sheet()).findByText(/…1234/)).toBeInTheDocument();
+    });
+
+    it("keeps the saved keys when they're left empty", async () => {
+      payment = { mode: "SANDBOX", apiKeyEnding: "1234", address: "Moda Cad. 1", city: "İstanbul" };
+      const u = await openPayment();
+      expect(within(sheet()).getByText(/…1234/)).toBeInTheDocument();
+      await fill(u, "Şehir", "İzmir");
+      await u.click(within(sheet()).getByRole("button", { name: "Kaydet" }));
+      await within(sheet()).findByRole("status");
+      expect(calls[0]?.body).toEqual({ mode: "SANDBOX", address: "Moda Cad. 1", city: "İzmir" });
+    });
+
+    it("needs keys the first time, and explains keys iyzico rejected", async () => {
+      rejectKeys = true;
+      const u = await openPayment();
+      await fill(u, "Kafe adresi", "Moda Cad. No 1");
+      await fill(u, "Şehir", "İstanbul");
+      await u.click(within(sheet()).getByRole("button", { name: "Kaydet" }));
+      expect(within(sheet()).getByText(/birlikte girin/)).toBeInTheDocument();
+      expect(calls).toEqual([]);
+
+      await fill(u, "iyzico API anahtarı", "sandbox-wrong-0000");
+      await fill(u, "iyzico güvenlik anahtarı (secret key)", "sandbox-wrong-1111");
+      await u.click(within(sheet()).getByRole("button", { name: "Kaydet" }));
+      expect(await within(sheet()).findByRole("alert")).toHaveTextContent("kabul etmedi");
+    });
   });
 });
