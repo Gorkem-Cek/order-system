@@ -1,6 +1,6 @@
 // Helpers for API integration tests. Each test file gets a random prefix and only creates
 // cafés and users under it, so files can run in parallel and clean up after themselves.
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -21,7 +21,7 @@ export const TEST_PASSWORD = "test-password-1";
 
 export function createTestContext(
   overrides: Partial<Config> = {},
-  deps: Pick<AppDeps, "payments" | "now"> = {},
+  deps: Pick<AppDeps, "payments" | "now" | "iyzicoFetch"> = {},
 ) {
   const config = {
     ...loadConfig({
@@ -30,6 +30,7 @@ export function createTestContext(
       CHECKOUT_RATE_LIMIT: "1000",
       // Each test file stores uploads in its own temporary folder.
       UPLOAD_DIR: mkdtempSync(path.join(tmpdir(), "siparis-uploads-")),
+      PAYMENT_SECRET_KEY: randomBytes(32).toString("base64"),
     }),
     ...overrides,
   };

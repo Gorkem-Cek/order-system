@@ -25,7 +25,9 @@ type CafeRow = {
   createdAt: Date;
 };
 
-function toAdminCafe(cafe: CafeRow & { users: { email: string }[] }): AdminCafe {
+function toAdminCafe(
+  cafe: CafeRow & { users: { email: string }[]; iyzicoMode: "SANDBOX" | "LIVE" | null },
+): AdminCafe {
   return {
     id: cafe.id,
     name: cafe.name,
@@ -33,6 +35,7 @@ function toAdminCafe(cafe: CafeRow & { users: { email: string }[] }): AdminCafe 
     isActive: cafe.isActive,
     createdAt: cafe.createdAt.toISOString(),
     loginEmail: cafe.users[0]?.email ?? null,
+    paymentMode: cafe.iyzicoMode,
   };
 }
 

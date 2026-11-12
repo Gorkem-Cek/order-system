@@ -63,6 +63,20 @@ export function createCafesRepository(prisma: PrismaClient) {
       return prisma.cafe.update({ where: { id }, data });
     },
 
+    /** Saves the café's address and iyzico account; `null` keys remove the account. */
+    updatePayment(
+      id: string,
+      data: {
+        address?: string;
+        city?: string;
+        iyzicoMode: "SANDBOX" | "LIVE" | null;
+        iyzicoApiKey: string | null;
+        iyzicoSecretKey: string | null;
+      },
+    ) {
+      return prisma.cafe.update({ where: { id }, data });
+    },
+
     /** Sets the password of every staff login of the café (one in the MVP). */
     updateStaffPasswordHash(cafeId: string, passwordHash: string) {
       return prisma.user

@@ -228,6 +228,15 @@ export function createIyzicoClient(
       };
     },
 
+    /** Fails with IyzicoError unless iyzico accepts these keys (a harmless card-BIN lookup). */
+    async checkCredentials() {
+      await post("/payment/bin/check", {
+        locale: "tr",
+        conversationId: "credentials-check",
+        binNumber: "552879",
+      });
+    },
+
     /** Voids a whole payment. Banks usually allow this only on the day of the payment. */
     async cancelPayment(paymentId: string, ip: string, conversationId: string) {
       await post("/payment/cancel", { locale: "tr", conversationId, paymentId, ip });

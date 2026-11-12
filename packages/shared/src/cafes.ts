@@ -32,6 +32,11 @@ export const updateCafeRequestSchema = z
 // POST /api/admin/cafes/:id/password — resets the café's shared login password.
 export const resetCafePasswordRequestSchema = z.object({ newPassword: newPasswordSchema });
 
+/** Which iyzico environment a café's keys belong to: test (sandbox) or real payments. */
+export const IYZICO_MODES = ["SANDBOX", "LIVE"] as const;
+export const iyzicoModeSchema = z.enum(IYZICO_MODES);
+export type IyzicoMode = z.infer<typeof iyzicoModeSchema>;
+
 export const adminCafeSchema = z.object({
   id: idSchema,
   name: z.string(),
@@ -40,9 +45,36 @@ export const adminCafeSchema = z.object({
   createdAt: z.iso.datetime(),
   // The café's shared staff login; null only if it was removed by hand.
   loginEmail: z.email().nullable(),
+  // Null until the café's iyzico keys are saved.
+  paymentMode: iyzicoModeSchema.nullable(),
 });
 
 export const adminCafesResponseSchema = z.object({ cafes: z.array(adminCafeSchema) });
+
+// GET / PUT /api/admin/cafes/:id/payment — keys are write-only: only the API key's last
+// characters come back, the secret key never does.
+export const cafePaymentSettingsSchema = z.object({
+  mode: iyzicoModeSchema.nullable(),
+  apiKeyEnding: z.string().nullable(),
+  address: z.string().nullable(),
+  city: z.string().nullable(),
+});
+
+const iyzicoKeySchema = z.string().trim().min(10).max(200);
+
+export const updateCafePaymentRequestSchema = z
+  .object({
+    mode: iyzicoModeSchema,
+    address: z.string().trim().min(5).max(200),
+    city: z.string().trim().min(2).max(50),
+    // Leave both out to keep the saved keys.
+    apiKey: iyzicoKeySchema.optional(),
+    secretKey: iyzicoKeySchema.optional(),
+  })
+  .refine((body) => (body.apiKey === undefined) === (body.secretKey === undefined), {
+    message: "Send both keys or neither",
+    path: ["secretKey"],
+  });
 
 // --- Staff: the café being managed ---
 
@@ -64,6 +96,8 @@ export type CreateCafeRequest = z.infer<typeof createCafeRequestSchema>;
 export type UpdateCafeRequest = z.infer<typeof updateCafeRequestSchema>;
 export type ResetCafePasswordRequest = z.infer<typeof resetCafePasswordRequestSchema>;
 export type AdminCafe = z.infer<typeof adminCafeSchema>;
+export type CafePaymentSettings = z.infer<typeof cafePaymentSettingsSchema>;
+export type UpdateCafePaymentRequest = z.infer<typeof updateCafePaymentRequestSchema>;
 export type AdminCafesResponse = z.infer<typeof adminCafesResponseSchema>;
 export type StaffCafe = z.infer<typeof staffCafeSchema>;
 
