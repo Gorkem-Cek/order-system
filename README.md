@@ -8,7 +8,7 @@ QR table ordering for cafés. Guests scan the QR code on their table, browse the
 
 - Per-table QR codes that open the café's menu, no login needed
 - Menu with categories, search, product options (size, milk, extras) and item notes
-- Cart and checkout with a mock payment (real payments later)
+- Cart and checkout through iyzico's hosted payment page, into each café's own iyzico account (a fake card in development); automatic refunds when staff cancel
 - Live staff order board with sound alerts: `new → preparing → served` (with cancellation)
 - "Call waiter" button
 - Staff panel: menu, prices, availability, tables and printable QR codes, café branding
