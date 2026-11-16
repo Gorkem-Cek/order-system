@@ -12,9 +12,18 @@ type OrderCardProps = {
   fresh: boolean;
   onHandled: () => void;
   onConflict: () => void;
+  /** A cancelled iyzico order whose money couldn't be given back automatically. */
+  onRefundFailed: (orderNumber: number) => void;
 };
 
-export function OrderCard({ order, now, fresh, onHandled, onConflict }: OrderCardProps) {
+export function OrderCard({
+  order,
+  now,
+  fresh,
+  onHandled,
+  onConflict,
+  onRefundFailed,
+}: OrderCardProps) {
   const { t, i18n } = useTranslation();
   const update = useUpdateOrderStatus();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
@@ -32,7 +41,10 @@ export function OrderCard({ order, now, fresh, onHandled, onConflict }: OrderCar
     update.mutate(
       { orderId: order.id, status },
       {
-        onSuccess: () => setConfirmingCancel(false),
+        onSuccess: (updated) => {
+          setConfirmingCancel(false);
+          if (updated.refund === "FAILED") onRefundFailed(updated.orderNumber);
+        },
         onError: (error) => {
           setConfirmingCancel(false);
           if (error instanceof ApiRequestError && error.code === "INVALID_STATUS_TRANSITION") {

@@ -40,6 +40,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     note: null,
     totalKurus: 26500,
     createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
+    refund: null,
     updatedAt: new Date().toISOString(),
     items: [
       {
@@ -218,6 +219,22 @@ describe("orders board", () => {
       expect(screen.queryByRole("article", { name: "#1" })).not.toBeInTheDocument(),
     );
     expect(requests.find((r) => r.method === "PATCH")?.body).toEqual({ status: "CANCELLED" });
+  });
+
+  it("warns when a cancelled order couldn't be refunded", async () => {
+    orders = [makeOrder()];
+    patchResponse = (order, status) => ({
+      status: 200,
+      body: { ...order, status, refund: "FAILED" },
+    });
+    const user = await openBoard();
+
+    await user.click(screen.getByRole("button", { name: "İptal et" }));
+    await user.click(screen.getByRole("button", { name: "Evet, iptal et" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Sipariş #1 iptal edildi ancak ücret iade edilemedi");
+    await user.click(within(alert).getByRole("button", { name: "Kapat" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("adds orders that arrive live and highlights them", async () => {

@@ -3,7 +3,11 @@ import type { PrismaClient } from "../../db";
 import type { OrderStatus, Prisma } from "../../generated/prisma/client";
 
 const bySortOrder = [{ sortOrder: "asc" as const }, { id: "asc" as const }];
-const withItems = { items: { orderBy: { id: "asc" as const } } };
+const withItems = {
+  items: { orderBy: { id: "asc" as const } },
+  // Whether a cancelled iyzico order's money went back.
+  paymentAttempt: { select: { refundStatus: true } },
+};
 
 export type NewOrder = {
   cafeId: string;

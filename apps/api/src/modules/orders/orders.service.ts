@@ -159,7 +159,12 @@ export function createOrdersService(deps: {
       return { orders: rows.map(toOrder), page: query.page, pageSize, total };
     },
 
-    async updateStatus(cafeId: string, orderId: string, to: OrderStatus): Promise<Order> {
+    async updateStatus(
+      cafeId: string,
+      orderId: string,
+      to: OrderStatus,
+      context: { ip: string },
+    ): Promise<Order> {
       const order = await orders.findById(cafeId, orderId);
       if (!order) throw notFound("Order");
 
@@ -181,6 +186,11 @@ export function createOrdersService(deps: {
           from: current?.status ?? order.status,
           to,
         });
+      }
+
+      // A cancelled order paid through iyzico gets its money back; the outcome is on the order.
+      if (to === "CANCELLED" && order.paymentRef.startsWith("iyzico:")) {
+        await iyzicoCheckout.refundOrder(orderId, context.ip);
       }
 
       const updated = await orders.findById(cafeId, orderId);

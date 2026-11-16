@@ -251,3 +251,16 @@
   background: var(--danger);
   color: #fff;
 }
+
+.boardAlert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-weight: 600;
+}

@@ -14,6 +14,7 @@ export function toOrder(order: OrderRow): Order {
     status: order.status,
     note: order.note,
     totalKurus: order.totalKurus,
+    refund: order.paymentAttempt?.refundStatus ?? null,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
     items: order.items.map((item) => ({

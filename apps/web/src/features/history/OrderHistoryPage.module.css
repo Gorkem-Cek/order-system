@@ -213,3 +213,14 @@
     padding-left: 16px;
   }
 }
+
+.refund {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.refund[data-refund="FAILED"] {
+  color: var(--danger);
+}

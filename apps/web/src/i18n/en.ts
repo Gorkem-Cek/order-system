@@ -181,7 +181,11 @@ export const en: Translation = {
       cancel: "Cancel",
     },
     cancelTitle: "Cancel order #{{number}}?",
-    cancelText: "The order leaves the board. Refunds are done manually for now.",
+    cancelText:
+      "The order leaves the board. If it was paid with iyzico, the money is refunded automatically.",
+    refundFailed:
+      "Order #{{number}} was cancelled but couldn’t be refunded. Please refund it in iyzico’s panel.",
+    dismiss: "Dismiss",
     cancelConfirm: "Yes, cancel it",
     cancelKeep: "Keep it",
     errors: {
@@ -309,6 +313,10 @@ export const en: Translation = {
       PREPARING: "Preparing",
       SERVED: "Served",
       CANCELLED: "Cancelled",
+    },
+    refund: {
+      REFUNDED: "Refunded",
+      FAILED: "Refund failed: refund it in iyzico’s panel",
     },
     showing: "Showing {{first}}–{{last}} of {{total}} orders",
     empty: "No orders on these dates.",

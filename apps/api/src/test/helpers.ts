@@ -43,6 +43,7 @@ export function createTestContext(
   return {
     app,
     prisma,
+    config,
     prefix,
     email,
 
