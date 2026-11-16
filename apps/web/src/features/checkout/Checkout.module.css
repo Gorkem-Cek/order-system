@@ -43,6 +43,11 @@
   margin-top: 18px;
 }
 
+.formTitle {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -84,7 +89,7 @@
   color: var(--danger);
 }
 
-.demoNotice {
+.notice {
   margin-top: 16px;
   padding: 10px 12px;
   border: 1px dashed var(--border);

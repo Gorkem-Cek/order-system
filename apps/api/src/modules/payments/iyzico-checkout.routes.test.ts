@@ -326,6 +326,15 @@ describe.skipIf(!hasDatabase)("checkout through iyzico", () => {
     expect((await status(page.paymentId, other.table.qrToken)).statusCode).toBe(404);
     expect((await status("cl0000000000000000000000")).statusCode).toBe(404);
   });
+
+  it("limits status checks per payment, not per Wi-Fi network", async () => {
+    const { start, status } = await setup();
+    const first = await start();
+    const second = await start();
+    for (let i = 0; i < 30; i++) expect((await status(first.paymentId)).statusCode).toBe(200);
+    expect((await status(first.paymentId)).statusCode).toBe(429);
+    expect((await status(second.paymentId)).statusCode).toBe(200);
+  });
 });
 
 describe.skipIf(!hasDatabase)("checkout without real payments allowed", () => {

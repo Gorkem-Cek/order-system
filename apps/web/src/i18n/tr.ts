@@ -70,6 +70,15 @@ export const tr = {
     cvc: "Güvenlik kodu (CVC)",
     pay: "{{price}} öde",
     paying: "Ödeme yapılıyor…",
+    redirecting: "iyzico’ya yönlendiriliyor…",
+    contactTitle: "İletişim bilgileriniz",
+    name: "Ad",
+    surname: "Soyad",
+    email: "E-posta",
+    phone: "Cep telefonu",
+    iyzicoNotice:
+      "Ödemeyi iyzico’nun güvenli sayfasında yapacaksınız; kart bilgileriniz bize ulaşmaz. Bu bilgiler yalnızca iyzico’ya iletilir ve bu cihazda hatırlanır.",
+    notAvailable: "Bu kafe henüz online ödeme almıyor. Siparişinizi garsona verebilirsiniz.",
     demoNotice:
       "Demo ödeme: gerçek bir tahsilat yapılmaz. 4000 0000 0000 0002 numaralı kart reddedilir.",
     invalid: {
@@ -77,6 +86,10 @@ export const tr = {
       cardNumber: "Geçerli bir kart numarası girin.",
       expiry: "AA/YY biçiminde girin.",
       cvc: "3 ya da 4 haneli kodu girin.",
+      name: "Adınızı girin.",
+      surname: "Soyadınızı girin.",
+      email: "Geçerli bir e-posta adresi girin.",
+      phone: "Geçerli bir cep telefonu girin (ör. 0555 123 45 67).",
     },
     errors: {
       paymentFailed: "Ödeme reddedildi. Lütfen başka bir kartla tekrar deneyin.",
@@ -84,7 +97,19 @@ export const tr = {
       cafeInactive: "Kafe şu anda online sipariş almıyor. Lütfen garsona danışın.",
       network: "Bağlantı kurulamadı. İnternetinizi kontrol edip tekrar deneyin.",
       generic: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+      providerUnavailable: "Ödeme sayfası şu anda açılamıyor. Lütfen biraz sonra tekrar deneyin.",
+      methodChanged: "Kafenin ödeme ayarları değişti. Lütfen tekrar deneyin.",
     },
+  },
+  paymentReturn: {
+    checkingTitle: "Ödemeniz kontrol ediliyor…",
+    checkingText: "Bu birkaç saniye sürebilir, lütfen sayfayı kapatmayın.",
+    slowText:
+      "Bu beklenenden uzun sürüyor. Ödemeyi tamamladıysanız siparişiniz onaylanınca burada görünecek; dilerseniz garsona danışın.",
+    failedTitle: "Ödeme tamamlanmadı",
+    failedText: "Siparişiniz oluşturulmadı. Sepetiniz duruyor, tekrar deneyebilirsiniz.",
+    retry: "Tekrar dene",
+    backToMenu: "Menüye dön",
   },
   success: {
     title: "Siparişiniz alındı!",
