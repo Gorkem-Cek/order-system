@@ -42,7 +42,16 @@ export const menuRoutes: FastifyPluginAsync<{
   // The guest's menu asks this after coming back from iyzico's payment page.
   app.get(
     "/:qrToken/payments/:paymentId",
-    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    {
+      config: {
+        rateLimit: {
+          max: 30,
+          timeWindow: "1 minute",
+          // The page polls while the payment is pending; guests on café Wi-Fi share an IP.
+          keyGenerator: (request) => `${request.clientIp}:${request.url}`,
+        },
+      },
+    },
     async (request) => {
       const { qrToken, paymentId } = paramsSchema
         .extend({ paymentId: idSchema })

@@ -1,8 +1,8 @@
 import type { MenuProduct, MenuResponse, PlacedOrder } from "@siparis/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { LanguageToggle } from "../../components/LanguageToggle";
 import { StatusScreen } from "../../components/StatusScreen";
 import { ApiRequestError } from "../../lib/api";
@@ -15,6 +15,7 @@ import { CartProvider } from "../cart/CartProvider";
 import { CartSheet } from "../cart/CartSheet";
 import { CheckoutSheet } from "../checkout/CheckoutSheet";
 import { OrderSuccess } from "../checkout/OrderSuccess";
+import { PaymentReturn } from "../checkout/PaymentReturn";
 import { WaiterCallButton } from "../waiter-calls/WaiterCallButton";
 import styles from "./MenuPage.module.css";
 import { ProductCard } from "./ProductCard";
@@ -80,6 +81,9 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
   const deferredQuery = useDeferredValue(query);
   const [sheet, setSheet] = useState<OpenSheet>(null);
   const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
+  // Set when the guest comes back from iyzico's payment page.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const returningPayment = searchParams.get("payment");
 
   const categories = useMemo(
     () =>
@@ -105,17 +109,50 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
     if (product) setSheet({ kind: "product", product, editing: line });
   };
 
-  const orderPlaced = (order: PlacedOrder) => {
-    dispatch({ type: "clear" });
-    setSheet(null);
-    setPlacedOrder(order);
-    window.scrollTo({ top: 0 });
-  };
+  const orderPlaced = useCallback(
+    (order: PlacedOrder) => {
+      dispatch({ type: "clear" });
+      setSheet(null);
+      setPlacedOrder(order);
+      window.scrollTo({ top: 0 });
+    },
+    [dispatch],
+  );
+  // Drops ?payment= so a reload or "back to menu" shows the plain menu.
+  const leavePaymentReturn = useCallback(
+    () => setSearchParams({}, { replace: true }),
+    [setSearchParams],
+  );
+  const paidOnIyzico = useCallback(
+    (order: PlacedOrder) => {
+      orderPlaced(order);
+      leavePaymentReturn();
+    },
+    [orderPlaced, leavePaymentReturn],
+  );
+  const retryAfterFailedPayment = useCallback(() => {
+    leavePaymentReturn();
+    setSheet({ kind: "cart" });
+  }, [leavePaymentReturn]);
   const cartChanged = () => {
     // Reload the menu so the cart re-prices and flags the lines that changed.
     void queryClient.invalidateQueries({ queryKey: ["menu", qrToken] });
     setSheet({ kind: "cart", notice: t("cart.changed") });
   };
+
+  if (returningPayment && !placedOrder) {
+    return (
+      <div style={brandStyle(menu.cafe.primaryColor)}>
+        <PaymentReturn
+          qrToken={qrToken}
+          paymentId={returningPayment}
+          onPaid={paidOnIyzico}
+          onRetry={retryAfterFailedPayment}
+          onDismiss={leavePaymentReturn}
+        />
+      </div>
+    );
+  }
 
   if (placedOrder) {
     return (
@@ -245,6 +282,7 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
         <CheckoutSheet
           qrToken={qrToken}
           priced={priced}
+          paymentMethod={menu.paymentMethod}
           onBack={() => setSheet({ kind: "cart" })}
           onSuccess={orderPlaced}
           onCartChanged={cartChanged}
