@@ -1,4 +1,4 @@
-import { formatKurus, type CheckoutResponse } from "@siparis/shared";
+import { formatKurus, type PlacedOrder } from "@siparis/shared";
 import { useTranslation } from "react-i18next";
 import styles from "./Checkout.module.css";
 
@@ -7,7 +7,7 @@ export function OrderSuccess({
   tableName,
   onBack,
 }: {
-  order: CheckoutResponse;
+  order: PlacedOrder;
   tableName: string;
   onBack: () => void;
 }) {

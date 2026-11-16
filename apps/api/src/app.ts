@@ -27,7 +27,11 @@ import { createMenuService } from "./modules/menu/menu.service";
 import { createOrdersRepository } from "./modules/orders/orders.repository";
 import { createOrdersService } from "./modules/orders/orders.service";
 import { staffOrdersRoutes } from "./modules/orders/staff-orders.routes";
-import { createIyzicoClient } from "./modules/payments/iyzico";
+import { createIyzicoClient, type IyzicoCredentials } from "./modules/payments/iyzico";
+import { createIyzicoCheckoutService } from "./modules/payments/iyzico-checkout.service";
+import { iyzicoRoutes } from "./modules/payments/iyzico.routes";
+import { createPaymentAttemptsRepository } from "./modules/payments/payment-attempts.repository";
+import { businessDate } from "./lib/business-date";
 import {
   createMockPaymentProvider,
   type PaymentProvider,
@@ -78,23 +82,40 @@ export function buildApp(
   const cafePayments = createCafePaymentsService({
     cafes,
     secretBox,
-    iyzico: (credentials) =>
-      createIyzicoClient(credentials, { ...(iyzicoFetch && { fetch: iyzicoFetch }) }),
+    iyzico: (credentials) => iyzicoClientFor(credentials),
   });
   const cafesService = createCafesService({ cafes, users, sessions, storage });
   const menuRepository = createMenuRepository(prisma);
-  const menuService = createMenuService({ menu: menuRepository });
+  const events = createEventBus();
+  const iyzicoClientFor = (credentials: IyzicoCredentials) =>
+    createIyzicoClient(credentials, { ...(iyzicoFetch && { fetch: iyzicoFetch }) });
+  const iyzicoCheckout = createIyzicoCheckoutService({
+    attempts: createPaymentAttemptsRepository(prisma),
+    secretBox,
+    iyzico: iyzicoClientFor,
+    events,
+    publicUrl: config.PUBLIC_URL,
+    businessDate: () => businessDate(now ? now() : new Date()),
+    ...(now && { now }),
+    log: app.log,
+  });
+  const menuService = createMenuService({
+    menu: menuRepository,
+    acceptsIyzico: iyzicoCheckout.canAccept,
+    allowMockPayments: config.ALLOW_MOCK_PAYMENTS,
+  });
   const staffMenu = createStaffMenuService({
     staffMenu: createStaffMenuRepository(prisma),
     menu: menuRepository,
     storage,
     ...(now && { now }),
   });
-  const events = createEventBus();
   const ordersService = createOrdersService({
     orders: createOrdersRepository(prisma),
     menuService,
     payments,
+    iyzicoCheckout,
+    allowMockPayments: config.ALLOW_MOCK_PAYMENTS,
     events,
     ...(now && { now }),
     log: app.log,
@@ -157,6 +178,7 @@ export function buildApp(
     prefix: "/api/menu",
     menuService,
     ordersService,
+    iyzicoCheckout,
     checkoutRateLimit: config.CHECKOUT_RATE_LIMIT,
   });
   app.register(guestWaiterCallRoutes, {
@@ -167,6 +189,7 @@ export function buildApp(
   app.register(staffWaiterCallRoutes, { prefix: "/api/staff", cafes, waiterCalls });
   app.register(staffMenuRoutes, { prefix: "/api/staff", cafes, staffMenu });
   app.register(tablesRoutes, { prefix: "/api/staff/tables", cafes, tables });
+  app.register(iyzicoRoutes, { prefix: "/api/payments/iyzico", iyzicoCheckout });
   if (config.WEB_DIR) app.register(webRoutes, { root: config.WEB_DIR });
 
   return app;

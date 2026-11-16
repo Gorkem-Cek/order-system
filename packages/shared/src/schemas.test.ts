@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   changePasswordRequestSchema,
   checkoutRequestSchema,
+  guestContactSchema,
+  phoneSchema,
   loginRequestSchema,
   MAX_ITEM_QUANTITY,
   orderHistoryQuerySchema,
@@ -29,7 +31,7 @@ describe("checkoutRequestSchema", () => {
     const parsed = checkoutRequestSchema.parse(validCheckout);
     expect(parsed.lines[0]?.note).toBe("Şekersiz olsun");
     expect(parsed.note).toBeUndefined();
-    expect(parsed.payment.cardNumber).toBe("4242424242424242");
+    expect(parsed.payment).toMatchObject({ cardNumber: "4242424242424242" });
   });
 
   it("defaults optionIds to an empty list", () => {
@@ -118,5 +120,42 @@ describe("orderHistoryQuerySchema", () => {
       orderHistoryQuerySchema.safeParse({ from: "2026-10-05", to: "2026-10-01" }).success,
     ).toBe(false);
     expect(orderHistoryQuerySchema.safeParse({ from: "2026-13-01" }).success).toBe(false);
+  });
+});
+
+describe("guest contact for iyzico", () => {
+  it("writes Turkish mobile numbers the way iyzico expects", () => {
+    for (const input of [
+      "0555 111 22 33",
+      "555 111 2233",
+      "+90 (555) 111-22-33",
+      "905551112233",
+      "00905551112233",
+    ]) {
+      expect(phoneSchema.parse(input)).toBe("+905551112233");
+    }
+  });
+
+  it("keeps international numbers and rejects what isn't a phone number", () => {
+    expect(phoneSchema.parse("+44 7700 900123")).toBe("+447700900123");
+    for (const bad of ["123", "0212 111 22 33", "abc", "+1"]) {
+      expect(phoneSchema.safeParse(bad).success).toBe(false);
+    }
+  });
+
+  it("trims names and normalises the email", () => {
+    expect(
+      guestContactSchema.parse({
+        name: " Ayşe ",
+        surname: "Yılmaz",
+        email: " Ayse@Example.COM ",
+        phone: "05551112233",
+      }),
+    ).toEqual({
+      name: "Ayşe",
+      surname: "Yılmaz",
+      email: "ayse@example.com",
+      phone: "+905551112233",
+    });
   });
 });

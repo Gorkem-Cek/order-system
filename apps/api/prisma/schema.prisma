@@ -59,12 +59,13 @@ model Cafe {
   // Encrypted with PAYMENT_SECRET_KEY (lib/secret-box.ts), never stored in plain text.
   iyzicoSecretKey String?
 
-  users       User[]
-  tables      Table[]
-  categories  Category[]
-  products    Product[]
-  orders      Order[]
-  waiterCalls WaiterCall[]
+  users           User[]
+  tables          Table[]
+  categories      Category[]
+  products        Product[]
+  orders          Order[]
+  waiterCalls     WaiterCall[]
+  paymentAttempts PaymentAttempt[]
 }
 
 model User {
@@ -108,9 +109,10 @@ model Table {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cafe        Cafe         @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  orders      Order[]
-  waiterCalls WaiterCall[]
+  cafe            Cafe             @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  orders          Order[]
+  waiterCalls     WaiterCall[]
+  paymentAttempts PaymentAttempt[]
 
   @@unique([cafeId, name])
 }
@@ -197,12 +199,50 @@ model Order {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  cafe  Cafe        @relation(fields: [cafeId], references: [id], onDelete: Cascade)
-  table Table?      @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  items OrderItem[]
+  cafe           Cafe            @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  table          Table?          @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  paymentAttempt PaymentAttempt?
 
   @@unique([cafeId, orderDate, orderNumber])
   @@index([cafeId, status, createdAt])
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+// A guest's payment on iyzico's page. The order is created only once iyzico confirms it, from
+// this priced snapshot. The guest's name, email and phone go to iyzico and are not stored here.
+model PaymentAttempt {
+  id            String               @id @default(cuid())
+  cafeId        String
+  tableId       String?
+  tableName     String
+  // To send the guest back to the right menu after paying.
+  qrToken       String
+  note          String?
+  totalKurus    Int
+  // The priced order lines (as for OrderItem), fixed when the payment started.
+  items         Json
+  status        PaymentAttemptStatus @default(PENDING)
+  iyzicoMode    IyzicoMode
+  iyzicoToken   String?              @unique
+  paymentId     String?
+  // iyzico's per-item transaction ids, needed for refunds.
+  transactions  Json?
+  failureReason String?
+  orderId       String?              @unique
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  cafe  Cafe   @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  table Table? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([cafeId, createdAt])
 }
 
 model OrderItem {

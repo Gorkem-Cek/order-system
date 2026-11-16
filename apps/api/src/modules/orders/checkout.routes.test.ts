@@ -1,4 +1,4 @@
-import { checkoutResponseSchema, type CheckoutRequestInput } from "@siparis/shared";
+import { placedOrderSchema, type CheckoutRequestInput } from "@siparis/shared";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestContext, hasDatabase } from "../../test/helpers";
 import {
@@ -57,7 +57,7 @@ describe.skipIf(!hasDatabase)("POST /api/menu/:qrToken/checkout", () => {
     });
 
     expect(res.statusCode).toBe(201);
-    const body = checkoutResponseSchema.parse(res.json());
+    const body = placedOrderSchema.parse(res.json());
     const expectedTotal = 2 * (16000 + 4000 + 3500) + 3 * 4000;
     expect(body).toMatchObject({ orderNumber: 1, totalKurus: expectedTotal });
     expect(payments.charge).toHaveBeenCalledWith(
@@ -101,7 +101,7 @@ describe.skipIf(!hasDatabase)("POST /api/menu/:qrToken/checkout", () => {
     const results = await Promise.all(
       Array.from({ length: 6 }, () => checkout(first.table.qrToken, line(first.cay))),
     );
-    const numbers = results.map((r) => checkoutResponseSchema.parse(r.json()).orderNumber);
+    const numbers = results.map((r) => placedOrderSchema.parse(r.json()).orderNumber);
     expect([...numbers].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6]);
 
     const other = await checkout(second.table.qrToken, line(second.cay));

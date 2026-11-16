@@ -1,4 +1,4 @@
-import type { CheckoutResponse, MenuProduct, MenuResponse } from "@siparis/shared";
+import type { MenuProduct, MenuResponse, PlacedOrder } from "@siparis/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -79,7 +79,7 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [sheet, setSheet] = useState<OpenSheet>(null);
-  const [placedOrder, setPlacedOrder] = useState<CheckoutResponse | null>(null);
+  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
 
   const categories = useMemo(
     () =>
@@ -105,7 +105,7 @@ function Menu({ qrToken, menu }: { qrToken: string; menu: MenuResponse }) {
     if (product) setSheet({ kind: "product", product, editing: line });
   };
 
-  const orderPlaced = (order: CheckoutResponse) => {
+  const orderPlaced = (order: PlacedOrder) => {
     dispatch({ type: "clear" });
     setSheet(null);
     setPlacedOrder(order);

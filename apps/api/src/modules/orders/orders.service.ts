@@ -2,7 +2,6 @@ import {
   ACTIVE_ORDER_STATUSES,
   ORDER_HISTORY_PAGE_SIZE,
   priceLine,
-  selectedOptionSchema,
   type CheckoutRequest,
   type CheckoutResponse,
   type Order,
@@ -10,49 +9,30 @@ import {
   type OrderHistoryResponse,
   type OrderStatus,
 } from "@siparis/shared";
-import { z } from "zod";
 import { businessDate } from "../../lib/business-date";
 import type { EventBus } from "../../lib/event-bus";
 import { AppError, notFound } from "../../lib/errors";
 import type { MenuService } from "../menu/menu.service";
+import type { IyzicoCheckoutService } from "../payments/iyzico-checkout.service";
 import type { PaymentProvider } from "../payments/payment-provider";
+import { toOrder, type OrderRow } from "./order-view";
 import { canTransition } from "./order-status";
 import type { NewOrder, OrdersRepository } from "./orders.repository";
 
-type OrderRow = NonNullable<Awaited<ReturnType<OrdersRepository["findById"]>>>;
-
-const storedOptionsSchema = z.array(selectedOptionSchema);
-
-export function toOrder(order: OrderRow): Order {
-  return {
-    id: order.id,
-    orderNumber: order.orderNumber,
-    tableName: order.tableName,
-    status: order.status,
-    note: order.note,
-    totalKurus: order.totalKurus,
-    createdAt: order.createdAt.toISOString(),
-    updatedAt: order.updatedAt.toISOString(),
-    items: order.items.map((item) => ({
-      id: item.id,
-      productName: item.productName,
-      unitPriceKurus: item.unitPriceKurus,
-      quantity: item.quantity,
-      note: item.note,
-      selectedOptions: storedOptionsSchema.parse(item.selectedOptions),
-    })),
-  };
-}
+export { toOrder };
 
 export function createOrdersService(deps: {
   orders: OrdersRepository;
   menuService: MenuService;
   payments: PaymentProvider;
+  iyzicoCheckout: IyzicoCheckoutService;
+  /** Whether the fake card payment may be used (development, tests and demos only). */
+  allowMockPayments: boolean;
   events: EventBus;
   now?: () => Date;
   log?: { error: (obj: object, msg: string) => void };
 }) {
-  const { orders, menuService, payments, events } = deps;
+  const { orders, menuService, payments, iyzicoCheckout, events } = deps;
   const now = deps.now ?? (() => new Date());
 
   return {
@@ -60,8 +40,24 @@ export function createOrdersService(deps: {
      * Pay-before-send checkout: price every line from the database (client prices are never
      * trusted), charge the card, and only then create the order.
      */
-    async checkout(qrToken: string, request: CheckoutRequest): Promise<CheckoutResponse> {
+    async checkout(
+      qrToken: string,
+      request: CheckoutRequest,
+      context: { ip: string },
+    ): Promise<CheckoutResponse> {
       const table = await menuService.resolveTable(qrToken);
+      const method = menuService.paymentMethodFor(table.cafe);
+      if (method === "none") {
+        throw new AppError(409, "PAYMENTS_NOT_SET_UP", "This café can't take payments yet");
+      }
+      // The guest must pay the way the café accepts, so a fake card can't skip a real payment.
+      if (request.payment.method !== method) {
+        throw new AppError(400, "VALIDATION_FAILED", "This café takes another payment method", {
+          reason: "PAYMENT_METHOD",
+          expected: method,
+        });
+      }
+
       const productIds = [...new Set(request.lines.map((line) => line.productId))];
       const products = new Map(
         (await orders.findProductsForCheckout(table.cafeId, productIds)).map((p) => [p.id, p]),
@@ -89,12 +85,31 @@ export function createOrdersService(deps: {
         };
       });
       const totalKurus = items.reduce((sum, item) => sum + item.unitPriceKurus * item.quantity, 0);
+      const note = request.note ?? null;
 
-      const charge = await payments.charge({
-        amountKurus: totalKurus,
-        payment: request.payment,
-        description: `${table.cafe.name} · ${table.name}`,
-      });
+      if (request.payment.method === "iyzico" && totalKurus > 0) {
+        const page = await iyzicoCheckout.start({
+          cafe: table.cafe,
+          table,
+          items,
+          totalKurus,
+          note,
+          buyer: request.payment.buyer,
+          locale: request.payment.locale,
+          ip: context.ip,
+        });
+        return { kind: "redirect", ...page };
+      }
+
+      // Fake payments, and orders where everything is free, need no payment page.
+      const charge =
+        totalKurus === 0
+          ? ({ ok: true, reference: "free" } as const)
+          : await payments.charge({
+              amountKurus: totalKurus,
+              payment: request.payment,
+              description: `${table.cafe.name} · ${table.name}`,
+            });
       if (!charge.ok) throw new AppError(402, "PAYMENT_FAILED", charge.reason);
 
       let order: OrderRow;
@@ -104,7 +119,7 @@ export function createOrdersService(deps: {
           tableId: table.id,
           tableName: table.name,
           orderDate: businessDate(now()),
-          note: request.note ?? null,
+          note,
           totalKurus,
           paymentRef: charge.reference,
           items,
@@ -117,7 +132,12 @@ export function createOrdersService(deps: {
       }
 
       events.publish(table.cafeId, { type: "order.created", order: toOrder(order) });
-      return { orderId: order.id, orderNumber: order.orderNumber, totalKurus: order.totalKurus };
+      return {
+        kind: "paid",
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        totalKurus: order.totalKurus,
+      };
     },
 
     /** Orders still on the live board (new and preparing), oldest first. */

@@ -24,6 +24,7 @@ export const menuFixture: MenuResponse = {
     primaryColor: "#7c4a2d",
   },
   table: { name: "Masa 5" },
+  paymentMethod: "mock",
   categories: [
     {
       id: ids.hot,

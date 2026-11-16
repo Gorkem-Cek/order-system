@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paymentMethodSchema } from "./checkout";
 import { idSchema, kurusSchema } from "./common";
 
 // GET /api/menu/:qrToken — the public menu a guest sees after scanning a table's QR code.
@@ -48,6 +49,7 @@ export const menuCafeSchema = z.object({
 export const menuResponseSchema = z.object({
   cafe: menuCafeSchema,
   table: z.object({ name: z.string() }),
+  paymentMethod: paymentMethodSchema,
   categories: z.array(menuCategorySchema),
 });
 

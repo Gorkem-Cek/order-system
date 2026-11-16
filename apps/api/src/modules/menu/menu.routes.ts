@@ -1,7 +1,8 @@
-import { checkoutRequestSchema, qrTokenSchema } from "@siparis/shared";
+import { checkoutRequestSchema, idSchema, qrTokenSchema } from "@siparis/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import type { OrdersService } from "../orders/orders.service";
+import type { IyzicoCheckoutService } from "../payments/iyzico-checkout.service";
 import type { MenuService } from "./menu.service";
 
 const paramsSchema = z.object({ qrToken: qrTokenSchema });
@@ -10,8 +11,9 @@ const paramsSchema = z.object({ qrToken: qrTokenSchema });
 export const menuRoutes: FastifyPluginAsync<{
   menuService: MenuService;
   ordersService: OrdersService;
+  iyzicoCheckout: IyzicoCheckoutService;
   checkoutRateLimit: number;
-}> = async (app, { menuService, ordersService, checkoutRateLimit }) => {
+}> = async (app, { menuService, ordersService, iyzicoCheckout, checkoutRateLimit }) => {
   app.get("/:qrToken", async (request) => {
     const { qrToken } = paramsSchema.parse(request.params);
     return menuService.getMenu(qrToken);
@@ -32,7 +34,20 @@ export const menuRoutes: FastifyPluginAsync<{
     async (request, reply) => {
       const { qrToken } = paramsSchema.parse(request.params);
       const body = checkoutRequestSchema.parse(request.body);
-      return reply.code(201).send(await ordersService.checkout(qrToken, body));
+      const result = await ordersService.checkout(qrToken, body, { ip: request.clientIp });
+      return reply.code(result.kind === "paid" ? 201 : 200).send(result);
+    },
+  );
+
+  // The guest's menu asks this after coming back from iyzico's payment page.
+  app.get(
+    "/:qrToken/payments/:paymentId",
+    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    async (request) => {
+      const { qrToken, paymentId } = paramsSchema
+        .extend({ paymentId: idSchema })
+        .parse(request.params);
+      return iyzicoCheckout.status(qrToken, paymentId, request.clientIp);
     },
   );
 };

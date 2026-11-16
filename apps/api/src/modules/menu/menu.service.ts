@@ -1,6 +1,12 @@
-import type { MenuCategory, MenuProduct, MenuResponse } from "@siparis/shared";
+import type { MenuCategory, MenuProduct, MenuResponse, PaymentMethod } from "@siparis/shared";
 import { AppError, notFound } from "../../lib/errors";
 import type { MenuRepository } from "./menu.repository";
+
+type CafePaymentKeys = {
+  iyzicoMode: "SANDBOX" | "LIVE" | null;
+  iyzicoApiKey: string | null;
+  iyzicoSecretKey: string | null;
+};
 
 type CategoryRow = Awaited<ReturnType<MenuRepository["findMenu"]>>[number];
 export type ProductRow = CategoryRow["products"][number];
@@ -32,10 +38,21 @@ export function toMenuCategory(category: CategoryRow): MenuCategory {
   return { id: category.id, name: category.name, products: category.products.map(toMenuProduct) };
 }
 
-export function createMenuService(deps: { menu: MenuRepository }) {
+export function createMenuService(deps: {
+  menu: MenuRepository;
+  /** Whether a café's iyzico account is usable. */
+  acceptsIyzico: (cafe: CafePaymentKeys) => boolean;
+  allowMockPayments: boolean;
+}) {
   const { menu } = deps;
 
   return {
+    /** iyzico once the café's account is connected; otherwise the fake card, where allowed. */
+    paymentMethodFor(cafe: CafePaymentKeys): PaymentMethod {
+      if (deps.acceptsIyzico(cafe)) return "iyzico";
+      return deps.allowMockPayments ? "mock" : "none";
+    },
+
     /** Resolves a table's QR token to its active café and table. */
     async resolveTable(qrToken: string) {
       const table = await menu.findTableByQrToken(qrToken);
@@ -64,6 +81,7 @@ export function createMenuService(deps: { menu: MenuRepository }) {
           primaryColor: cafe.primaryColor,
         },
         table: { name: table.name },
+        paymentMethod: this.paymentMethodFor(cafe),
         categories,
       };
     },
