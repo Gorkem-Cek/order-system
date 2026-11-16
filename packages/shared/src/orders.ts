@@ -28,6 +28,8 @@ export const orderSchema = z.object({
   status: orderStatusSchema,
   note: z.string().nullable(),
   totalKurus: kurusSchema,
+  /** For a cancelled order paid through iyzico: whether the money went back automatically. */
+  refund: z.enum(["REFUNDED", "FAILED"]).nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   items: z.array(orderItemSchema),

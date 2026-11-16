@@ -183,7 +183,14 @@ function HistoryRow({ order }: { order: Order }) {
           <span className={styles.tableName}>{order.tableName}</span>
           <span className={styles.itemsSummary}>{summary}</span>
           <span className={styles.total}>{formatKurus(order.totalKurus)}</span>
-          <span className={styles.status}>{t(`history.statuses.${order.status}`)}</span>
+          <span className={styles.status}>
+            <span>{t(`history.statuses.${order.status}`)}</span>
+            {order.refund && (
+              <span className={styles.refund} data-refund={order.refund}>
+                {t(`history.refund.${order.refund}`)}
+              </span>
+            )}
+          </span>
         </summary>
         <div className={styles.details}>
           <ul className={styles.items}>

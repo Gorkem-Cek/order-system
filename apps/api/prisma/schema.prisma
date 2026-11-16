@@ -216,6 +216,11 @@ enum PaymentAttemptStatus {
 
 // A guest's payment on iyzico's page. The order is created only once iyzico confirms it, from
 // this priced snapshot. The guest's name, email and phone go to iyzico and are not stored here.
+enum RefundStatus {
+  REFUNDED
+  FAILED
+}
+
 model PaymentAttempt {
   id            String               @id @default(cuid())
   cafeId        String
@@ -234,6 +239,10 @@ model PaymentAttempt {
   // iyzico's per-item transaction ids, needed for refunds.
   transactions  Json?
   failureReason String?
+  // Set when staff cancel the paid order: whether iyzico gave the money back.
+  refundStatus  RefundStatus?
+  refundError   String?
+  refundedAt    DateTime?
   orderId       String?              @unique
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
@@ -243,6 +252,7 @@ model PaymentAttempt {
   order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([cafeId, createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {

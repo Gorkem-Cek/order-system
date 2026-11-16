@@ -10,6 +10,28 @@ import type { PaymentAttemptsRepository } from "./payment-attempts.repository";
 
 /** A guest who hasn't finished on iyzico's page after this long has given up. */
 const ABANDONED_AFTER_MS = 30 * 60_000;
+/** iyzico wants an IP on cancels; background re-checks have no guest, so use the server's. */
+const SWEEP_IP = "127.0.0.1";
+
+/**
+ * iyzico's per-item transactions as stored on a paid attempt, or null if any is unreadable
+ * (a partial refund must never be reported as a full one).
+ */
+function storedTransactions(value: unknown) {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const transactions: { paymentTransactionId: string; paidPriceKurus: number }[] = [];
+  for (const item of value as unknown[]) {
+    const t = item as { paymentTransactionId?: unknown; paidPriceKurus?: unknown } | null;
+    if (typeof t?.paymentTransactionId !== "string" || typeof t.paidPriceKurus !== "number") {
+      return null;
+    }
+    transactions.push({
+      paymentTransactionId: t.paymentTransactionId,
+      paidPriceKurus: t.paidPriceKurus,
+    });
+  }
+  return transactions.filter((t) => t.paidPriceKurus > 0);
+}
 
 type CafeKeys = {
   iyzicoMode: "SANDBOX" | "LIVE" | null;
@@ -139,6 +161,77 @@ export function createIyzicoCheckoutService(deps: {
   }
 
   return {
+    /**
+     * Gives a cancelled order's money back. Tries voiding the whole payment first (only
+     * possible on the day of payment), then refunds each basket item. Never throws: the result
+     * is stored on the attempt so staff can see whether to refund by hand in iyzico's panel.
+     * Returns null for orders that weren't paid through iyzico.
+     */
+    async refundOrder(orderId: string, ip: string): Promise<"REFUNDED" | "FAILED" | null> {
+      const attempt = await attempts.findByOrderId(orderId);
+      if (!attempt || attempt.status !== "PAID" || !attempt.paymentId) return null;
+      if (attempt.refundStatus === "REFUNDED") return "REFUNDED";
+
+      const fail = async (error: string) => {
+        deps.log?.error({ attemptId: attempt.id, orderId, error }, "iyzico refund failed");
+        await attempts.setRefund(attempt.id, { status: "FAILED", error: error.slice(0, 500) });
+        return "FAILED" as const;
+      };
+      const client = clientFor(attempt.cafe);
+      if (!client) return fail("The café's iyzico account isn't connected");
+
+      try {
+        await client.cancelPayment(attempt.paymentId, ip, attempt.id);
+      } catch (cancelError) {
+        // Without an error code iyzico wasn't reached; a refund wouldn't get through either.
+        if (!(cancelError instanceof IyzicoError && cancelError.code !== undefined)) {
+          return fail((cancelError as Error).message);
+        }
+        const transactions = storedTransactions(attempt.transactions);
+        if (!transactions?.length) return fail(`Cancel refused: ${cancelError.message}`);
+        for (const transaction of transactions) {
+          try {
+            await client.refundTransaction(
+              transaction.paymentTransactionId,
+              transaction.paidPriceKurus,
+              ip,
+              attempt.id,
+            );
+          } catch (refundError) {
+            return fail(
+              `Refund of transaction ${transaction.paymentTransactionId} failed: ${(refundError as Error).message}`,
+            );
+          }
+        }
+      }
+      await attempts.setRefund(attempt.id, { status: "REFUNDED", error: null });
+      return "REFUNDED";
+    },
+
+    /**
+     * Re-checks payments whose guest never came back from iyzico (closed the tab, lost
+     * connection), so a payment that went through still becomes an order. Run periodically.
+     */
+    async sweepPending(options: { olderThanMs?: number; maxAgeMs?: number; limit?: number } = {}) {
+      const at = now().getTime();
+      const stale = await attempts.findPendingCreatedBetween(
+        new Date(at - (options.maxAgeMs ?? 24 * 60 * 60_000)),
+        new Date(at - (options.olderThanMs ?? 2 * 60_000)),
+        options.limit ?? 50,
+      );
+      const results = { paid: 0, failed: 0, pending: 0 };
+      for (const attempt of stale) {
+        try {
+          const status = await confirm(attempt, SWEEP_IP);
+          results[status === "PAID" ? "paid" : status === "FAILED" ? "failed" : "pending"]++;
+        } catch (error) {
+          deps.log?.error({ err: error, attemptId: attempt.id }, "Payment re-check failed");
+          results.pending++;
+        }
+      }
+      return results;
+    },
+
     /** Whether the café can take iyzico payments. */
     canAccept: (cafe: CafeKeys) =>
       Boolean(secretBox && cafe.iyzicoMode && cafe.iyzicoApiKey && cafe.iyzicoSecretKey),

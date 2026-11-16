@@ -34,6 +34,7 @@ const order = (n: number, status: Order["status"] = "SERVED"): Order => ({
   note: n === 1 ? "Hepsi birlikte" : null,
   totalKurus: 20000,
   createdAt: "2026-11-04T09:15:00.000Z",
+  refund: status === "CANCELLED" ? "FAILED" : null,
   updatedAt: "2026-11-04T09:20:00.000Z",
   items: [
     {
@@ -101,6 +102,11 @@ describe("OrderHistoryPage", () => {
     expect(rows.map((r) => within(r).getByText(/^#\d+$/).textContent)).toEqual(["#2", "#1"]);
     expect(within(rows[0] as HTMLElement).getByText("Servis edildi")).toBeInTheDocument();
     expect(within(rows[1] as HTMLElement).getByText("İptal edildi")).toBeInTheDocument();
+    // A cancelled iyzico order whose money didn't go back says so.
+    expect(
+      within(rows[1] as HTMLElement).getByText("İade yapılamadı: iyzico panelinden iade edin"),
+    ).toBeInTheDocument();
+    expect(within(rows[0] as HTMLElement).queryByText(/İade/)).not.toBeInTheDocument();
     expect(within(rows[0] as HTMLElement).getByText("2× Latte")).toBeInTheDocument();
   });
 

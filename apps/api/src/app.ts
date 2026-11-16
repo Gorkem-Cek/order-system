@@ -54,6 +54,8 @@ import { healthRoutes } from "./routes/health";
 import { uploadsRoutes } from "./routes/uploads";
 import { webRoutes } from "./routes/web";
 
+const PAYMENT_SWEEP_INTERVAL_MS = 2 * 60_000;
+
 export type AppDeps = {
   config: Config;
   prisma: PrismaClient;
@@ -191,6 +193,27 @@ export function buildApp(
   app.register(tablesRoutes, { prefix: "/api/staff/tables", cafes, tables });
   app.register(iyzicoRoutes, { prefix: "/api/payments/iyzico", iyzicoCheckout });
   if (config.WEB_DIR) app.register(webRoutes, { root: config.WEB_DIR });
+
+  // Re-checks iyzico payments whose guest never came back, so paid ones still become orders.
+  // Only while actually serving (tests use inject() and never listen).
+  let sweepTimer: NodeJS.Timeout | undefined;
+  let sweeping = false;
+  app.addHook("onListen", async () => {
+    if (!secretBox) return;
+    sweepTimer = setInterval(() => {
+      if (sweeping) return;
+      sweeping = true;
+      iyzicoCheckout
+        .sweepPending()
+        .then((result) => {
+          if (result.paid || result.failed) app.log.info(result, "Re-checked pending payments");
+        })
+        .catch((error: unknown) => app.log.error({ err: error }, "Payment re-check failed"))
+        .finally(() => (sweeping = false));
+    }, PAYMENT_SWEEP_INTERVAL_MS);
+    sweepTimer.unref();
+  });
+  app.addHook("onClose", async () => clearInterval(sweepTimer));
 
   return app;
 }

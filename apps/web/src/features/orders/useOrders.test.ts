@@ -10,6 +10,7 @@ const order = (id: string, createdAt: string, status: Order["status"] = "NEW"): 
   note: null,
   totalKurus: 4000,
   createdAt,
+  refund: null,
   updatedAt: createdAt,
   items: [],
 });

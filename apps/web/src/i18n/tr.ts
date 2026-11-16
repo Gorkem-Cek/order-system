@@ -182,7 +182,10 @@ export const tr = {
       cancel: "İptal et",
     },
     cancelTitle: "Sipariş #{{number}} iptal edilsin mi?",
-    cancelText: "Sipariş panodan kalkar. Ödeme iadesi şimdilik elle yapılmalıdır.",
+    cancelText: "Sipariş panodan kalkar. iyzico ile ödendiyse ücret otomatik olarak iade edilir.",
+    refundFailed:
+      "Sipariş #{{number}} iptal edildi ancak ücret iade edilemedi. Lütfen iyzico panelinden iade edin.",
+    dismiss: "Kapat",
     cancelConfirm: "Evet, iptal et",
     cancelKeep: "Vazgeç",
     errors: {
@@ -310,6 +313,10 @@ export const tr = {
       PREPARING: "Hazırlanıyor",
       SERVED: "Servis edildi",
       CANCELLED: "İptal edildi",
+    },
+    refund: {
+      REFUNDED: "Ücret iade edildi",
+      FAILED: "İade yapılamadı: iyzico panelinden iade edin",
     },
     showing: "{{total}} siparişten {{first}}–{{last}} gösteriliyor",
     empty: "Bu tarihlerde sipariş yok.",

@@ -33,6 +33,32 @@ export function createPaymentAttemptsRepository(prisma: PrismaClient) {
       });
     },
 
+    /** The paid attempt behind an order, if it was paid through iyzico. */
+    findByOrderId(orderId: string) {
+      return prisma.paymentAttempt.findUnique({ where: { orderId }, include: { cafe: true } });
+    },
+
+    /** Still-pending attempts created in [from, to), oldest first: guests who never came back. */
+    findPendingCreatedBetween(from: Date, to: Date, limit: number) {
+      return prisma.paymentAttempt.findMany({
+        where: { status: "PENDING", createdAt: { gte: from, lt: to } },
+        include: { cafe: true, order: true },
+        orderBy: { createdAt: "asc" },
+        take: limit,
+      });
+    },
+
+    setRefund(id: string, refund: { status: "REFUNDED" | "FAILED"; error: string | null }) {
+      return prisma.paymentAttempt.update({
+        where: { id },
+        data: {
+          refundStatus: refund.status,
+          refundError: refund.error,
+          refundedAt: refund.status === "REFUNDED" ? new Date() : null,
+        },
+      });
+    },
+
     /** Marks a still-pending attempt as failed; returns whether it was pending. */
     async markFailed(id: string, failureReason: string) {
       const { count } = await prisma.paymentAttempt.updateMany({

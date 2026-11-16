@@ -40,6 +40,8 @@ export function OrdersBoard() {
   const [soundReady, setSoundReady] = useState(false);
   const [muted, setMuted] = useState(() => readStorage(MUTE_KEY) === "1");
   const [freshUntil, setFreshUntil] = useState<Record<string, number>>({});
+  // Cancelled orders whose refund failed; staff must refund them in iyzico's panel.
+  const [refundFailures, setRefundFailures] = useState<number[]>([]);
 
   const stream = useStaffStream({
     onOrderCreated: (order: Order) => {
@@ -125,6 +127,19 @@ export function OrdersBoard() {
           ))}
       </div>
 
+      {refundFailures.map((number) => (
+        <p key={number} className={styles.boardAlert} role="alert">
+          <span>{t("board.refundFailed", { number })}</span>
+          <button
+            type="button"
+            className={styles.toolButton}
+            onClick={() => setRefundFailures((list) => list.filter((n) => n !== number))}
+          >
+            {t("board.dismiss")}
+          </button>
+        </p>
+      ))}
+
       <WaiterCallsPanel calls={waiterCalls.data ?? []} now={now} />
 
       <div className={styles.columns}>
@@ -145,6 +160,11 @@ export function OrdersBoard() {
                     now={now}
                     fresh={(freshUntil[order.id] ?? 0) > now}
                     onHandled={() => unhighlight(order.id)}
+                    onRefundFailed={(number) =>
+                      setRefundFailures((list) =>
+                        list.includes(number) ? list : [...list, number],
+                      )
+                    }
                     onConflict={() =>
                       void queryClient.invalidateQueries({ queryKey: activeOrdersKey(cafe.id) })
                     }

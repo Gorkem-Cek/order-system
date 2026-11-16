@@ -31,6 +31,6 @@ export const staffOrdersRoutes: FastifyPluginAsync<{
   app.patch("/orders/:id/status", async (request) => {
     const { id } = paramsSchema.parse(request.params);
     const { status } = updateOrderStatusRequestSchema.parse(request.body);
-    return ordersService.updateStatus(cafeIdOf(request), id, status);
+    return ordersService.updateStatus(cafeIdOf(request), id, status, { ip: request.clientIp });
   });
 };
