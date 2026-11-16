@@ -1,6 +1,6 @@
 # Siparİş
 
-QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the café's menu, pay (mocked for now) and the order appears live on the staff board; café staff manage orders, menu and tables; a super-admin manages all cafés. Full product spec: `docs/SPEC.md` — read it before feature work.
+QR table-ordering for cafés (multi-tenant). Guests scan a table QR, browse the café's menu, pay on iyzico's hosted page (each café's own merchant account; a fake card in dev/tests) and the order appears live on the staff board; café staff manage orders, menu and tables; a super-admin manages all cafés. Full product spec: `docs/SPEC.md` — read it before feature work.
 
 ## Stack
 
